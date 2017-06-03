@@ -19,7 +19,7 @@ def get_url(season, game):
     return 'http://statsapi.web.nhl.com/api/v1/game/{0:d}0{1:d}/feed/live'.format(season, game)
 
 def get_json_save_filename(season, game):
-    return '{0:s}/{1:d}/{2:d}.json'.format(SAVE_FOLDER, season, game)
+    return '{0:s}/{1:d}/{2:d}.pkl'.format(SAVE_FOLDER, season, game)
 
 def get_parsed_save_filename(season, game):
     pass
@@ -43,14 +43,17 @@ def scrape_game(season, game, force_overwrite = False):
     filename = get_json_save_filename(season, game)
     if force_overwrite or not os.path.exists(filename):
         import urllib.request
-        with urllib.request.urlopen(url) as reader:
-            try:
-                page = reader.read().decode('latin-1')
-            except Exception as e:
-                print('Error with', season, game, e, e.args)
-                page = ''
-        import pickle
+        try:
+            with urllib.request.urlopen(url) as reader:
+                page = reader.read()
+        except Exception as e:
+            print('Error reading api url for', season, game, e, e.args)
+            page = ''
+        import zlib
+        page2 = zlib.compress(page, level=9)
         w = open(filename, 'wb')
-        pickle.dump(page, w)
+        w.write(page2)
+        w.close()
 
-scrape_game(2007, 20001, True)
+
+#scrape_game(2007, 20001)
