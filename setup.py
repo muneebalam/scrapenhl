@@ -8,4 +8,13 @@ setup(name = 'scrapenhl',
       author_email = 'muneeb.alam@gmail.com',
       license = 'MIT',
       packages = ['scrapenhl'],
+      install_requires=[
+            'pandas',
+            'numpy',
+            'scipy',
+            'scikit-learn',
+            'matplotlib',
+            'seaborn',
+          'feather-format'
+      ],
       zip_safe = False)

@@ -30,4 +30,5 @@ def scrape_full_season(season, startgame = 20001, force_overwrite = False, pause
 def update_playerlog():
     pass
 
-scrape_full_season(2008)
+for season in range(2010, 2017):
+    scrape_full_season(2010)
