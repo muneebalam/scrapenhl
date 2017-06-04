@@ -193,7 +193,11 @@ def write_quick_gamelog_file():
     Writes the game log dataframe (in global namespace) to disk in feather format
     """
     import feather
-    BASIC_GAMELOG.sort_values(by = ['Season', 'Game'], inplace = True)
+    try:
+        BASIC_GAMELOG.sort_values(by = ['Season', 'Game'], inplace = True)
+    except UnboundLocalError:
+        BASIC_GAMELOG = get_quick_gamelog_file()
+        BASIC_GAMELOG.sort_values(by=['Season', 'Game'], inplace=True)
     BASIC_GAMELOG = BASIC_GAMELOG.drop_duplicates()
     feather.write_dataframe(BASIC_GAMELOG, BASIC_GAMELOG_FILE)
 

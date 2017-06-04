@@ -88,7 +88,7 @@ def get_parsed_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game_parsed.zlib
     """
-    return '{0:s}{1:d}/{2:d}_parsed.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return '{0:s}{1:d}/{2:d}_parsed.hdf5'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
 
 def get_parsed_shifts_save_filename(season, game):
     """
@@ -206,6 +206,10 @@ def parse_game(season, game, force_overwrite = False):
         update_quick_gamelog_from_json(data)
 
         events = read_events_from_json(data['liveData']['plays']['allPlays'])
+
+        if events is not None:
+            events.to_hdf(filename, key='Game{0:d}0{1:d}'.format(season, game), mode='w',
+                          complevel=9, complib='zlib')
 
         #pbp_compressed = zlib.compress(bytes(events, encoding = 'latin-1'), level=9)
         #w = open(filename, 'wb')
@@ -526,4 +530,57 @@ def read_events_from_json(pbp):
         Dataframe of the game's play by play data
     """
     ### TODO fill this out
-    pass
+
+    import numpy as np
+    import pandas as pd
+
+    index = [i for i in range(len(pbp))]
+    period = [-1 for i in range(len(pbp))]
+    time = ['0:00' for i in range(len(pbp))]
+    event = ['NA' for i in range(len(pbp))]
+
+    team = [-1 for i in range(len(pbp))]
+    p1 = [-1 for i in range(len(pbp))]
+    p1role = ['' for i in range(len(pbp))]
+    p2 = [-1 for i in range(len(pbp))]
+    p2role = ['' for i in range(len(pbp))]
+    xy = [(np.NaN, np.NaN) for i in range(len(pbp))]
+    note = ['' for i in range(len(pbp))]
+
+    for i in range(len(pbp)):
+        period[i] = int(pbp[i]['about']['period'])
+        time[i] = pbp[i]['about']['periodTime']
+        event[i] = pbp[i]['result']['event']
+
+        try:
+            xy[i] = (float(pbp[i]['coordinates']['x']), float(pbp[i]['coordinates']['y']))
+        except KeyError:
+            pass
+        try:
+            team[i] = pbp[i]['team']['id']
+        except KeyError:
+            pass
+        try:
+            p1[i] = pbp[i]['players'][0]['player']['id']
+            p1role[i] = pbp[i]['players'][0]['playerType']
+        except KeyError:
+            pass
+        try:
+            p2[i] = pbp[i]['players'][1]['player']['id']
+            p2role[i] = pbp[i]['players'][1]['playerType']
+        except KeyError:
+            pass
+        except IndexError: #e.g. on a give or take
+            pass
+
+        try:
+            note[i] = pbp[i]['result']['description']
+        except KeyError:
+            pass
+
+        #print(period[i], time[i], event[i], xy[i], team[i], p1[i], p1role[i], p2[i], p2role[i])
+
+    pbpdf = pd.DataFrame({'Index': index, 'Period': period, 'Time': time, 'Event': event,
+                          'Team': team, 'Actor': p1, 'ActorRole': p1role, 'Recipient': p2, 'RecipientRole': p2role,
+                          'XY': xy, 'Note': note})
+    return pbpdf
