@@ -1,0 +1,10 @@
+LICENSE.txt
+MANIFEST.in
+setup.py
+scrapenhl/__init__.py
+scrapenhl.egg-info/PKG-INFO
+scrapenhl.egg-info/SOURCES.txt
+scrapenhl.egg-info/dependency_links.txt
+scrapenhl.egg-info/not-zip-safe
+scrapenhl.egg-info/requires.txt
+scrapenhl.egg-info/top_level.txt
