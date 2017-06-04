@@ -2,7 +2,7 @@
 File and folder paths, and other variables needed by all modules in this package.
 """
 
-SAVE_FOLDER = "/Users/muneebalam/PycharmProjects/scrapenhl/scrapenhl/scraping/"
+SAVE_FOLDER = "/Users/muneebalam/PycharmProjects/scrapenhl/scrapenhl/scrape/"
 PLAYER_ID_FILE = "{0:s}playerids.feather".format(SAVE_FOLDER)
 BASIC_GAMELOG_FILE = "{0:s}quickgamelog.feather".format(SAVE_FOLDER)
 
@@ -50,6 +50,11 @@ def write_player_id_file(df):
 
     This file maps player IDs to names, positions, handedness, teams, and jersey numbers. Using IDs is a way to avoid
     having to correct the numerous spelling inconsistencies in the data.
+
+    Parameters
+    -----------
+    df : Pandas dataframe
+        The player ID dataframe
     """
     import feather
     df.sort_values(by = "ID", inplace = True)
@@ -57,19 +62,15 @@ def write_player_id_file(df):
 
 def get_quick_gamelog_file():
     """
-    Returns the NHL API url to scrape.
+    Returns the game log file
 
-    Parameters
-    -----------
-    season : int
-        The season of the game. 2007-08 would be 2007.
-    game : int
-        The game id. This can range from 20001 to 21230 for regular season, and 30111 to 30417 for playoffs.
-        The preseason, all-star game, Olympics, and World Cup also have game IDs that can be provided.
+    This file contains basic information on games: season, game, date, venue, and home and road names, scores, and
+    coaches. A new blank file is created if necessary.
+
     Returns
     --------
-    str
-        URL to scrape, http://statsapi.web.nhl.com/api/v1/game/[season]0[game]/feed/live
+    Pandas df
+        The game log dataframe
     """
     import feather
     import os.path
@@ -86,19 +87,12 @@ def get_quick_gamelog_file():
 
 def write_quick_gamelog_file(df):
     """
-    Returns the NHL API url to scrape.
+    Writes the game log dataframe to disk in feather format
 
     Parameters
     -----------
-    season : int
-        The season of the game. 2007-08 would be 2007.
-    game : int
-        The game id. This can range from 20001 to 21230 for regular season, and 30111 to 30417 for playoffs.
-        The preseason, all-star game, Olympics, and World Cup also have game IDs that can be provided.
-    Returns
-    --------
-    str
-        URL to scrape, http://statsapi.web.nhl.com/api/v1/game/[season]0[game]/feed/live
+    df : Pandas dataframe
+        The basic game log dataframe
     """
     import feather
     df.sort_values(by = ['Season', 'Game'], inplace = True)

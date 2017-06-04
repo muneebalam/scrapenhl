@@ -18,6 +18,24 @@ def get_url(season, game):
     """
     return 'http://statsapi.web.nhl.com/api/v1/game/{0:d}0{1:d}/feed/live'.format(season, game)
 
+def get_shift_url(season, game):
+    """
+    Returns the NHL API shifts url to scrape.
+
+    Parameters
+    -----------
+    season : int
+        The season of the game. 2007-08 would be 2007.
+    game : int
+        The game id. This can range from 20001 to 21230 for regular season, and 30111 to 30417 for playoffs.
+        The preseason, all-star game, Olympics, and World Cup also have game IDs that can be provided.
+    Returns
+    --------
+    str
+        http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId=[season]0[game]
+    """
+    return 'http://www.nhl.com/stats/rest/shiftcharts?cayenneExp=gameId={0:d}0{1:d}'.format(season, game)
+
 def get_json_save_filename(season, game):
     """
     Returns the algorithm-determined save file name of the json accessed online.
@@ -36,6 +54,24 @@ def get_json_save_filename(season, game):
     """
     return '{0:s}/{1:d}/{2:d}.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
 
+def get_shift_save_filename(season, game):
+    """
+    Returns the algorithm-determined save file name of the shift json accessed online.
+
+    Parameters
+    -----------
+    season : int
+        The season of the game. 2007-08 would be 2007.
+    game : int
+        The game id. This can range from 20001 to 21230 for regular season, and 30111 to 30417 for playoffs.
+        The preseason, all-star game, Olympics, and World Cup also have game IDs that can be provided.
+    Returns
+    --------
+    str
+        file name, SAVE_FOLDER/Season/Game_shifts.zlib
+    """
+    return '{0:s}/{1:d}/{2:d}_shifts.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+
 def get_parsed_save_filename(season, game):
     """
     Returns the algorithm-determined save file name of the parsed pbp file.
@@ -53,6 +89,24 @@ def get_parsed_save_filename(season, game):
         file name, SAVE_FOLDER/Season/Game_parsed.zlib
     """
     return '{0:s}/{1:d}/{2:d}_parsed.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+
+def get_parsed_shifts_save_filename(season, game):
+    """
+    Returns the algorithm-determined save file name of the parsed toi file.
+
+    Parameters
+    -----------
+    season : int
+        The season of the game. 2007-08 would be 2007.
+    game : int
+        The game id. This can range from 20001 to 21230 for regular season, and 30111 to 30417 for playoffs.
+        The preseason, all-star game, Olympics, and World Cup also have game IDs that can be provided.
+    Returns
+    --------
+    str
+        file name, SAVE_FOLDER/Season/Game_shifts_parsed.zlib
+    """
+    return '{0:s}/{1:d}/{2:d}_shifts_parsed.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
 
 def scrape_game(season, game, force_overwrite = False):
     """
@@ -78,7 +132,7 @@ def scrape_game(season, game, force_overwrite = False):
                 page = reader.read()
         except Exception as e:
             if game < 30111:
-                print('Error reading api url for', season, game, e, e.args)
+                print('Error reading pbp url for', season, game, e, e.args)
                 page = bytes('', encoding = 'latin-1')
         if game < 30111:
             import zlib
@@ -86,6 +140,25 @@ def scrape_game(season, game, force_overwrite = False):
             w = open(filename, 'wb')
             w.write(page2)
             w.close()
+
+    url = get_shift_url(season, game)
+    filename = get_shift_save_filename(season, game)
+    if force_overwrite or not os.path.exists(filename):
+        import urllib.request
+        try:
+            with urllib.request.urlopen(url) as reader:
+                page = reader.read()
+        except Exception as e:
+            if game < 30111:
+                print('Error reading shift url for', season, game, e, e.args)
+                page = bytes('', encoding='latin-1')
+        if game < 30111:
+            import zlib
+            page2 = zlib.compress(page, level=9)
+            w = open(filename, 'wb')
+            w.write(page2)
+            w.close()
+
 
 def parse_game(season, game, force_overwrite = False):
     """
@@ -108,7 +181,7 @@ def parse_game(season, game, force_overwrite = False):
     import json
     filename = get_parsed_save_filename(season, game)
     if (force_overwrite or not os.path.exists(filename)):
-        r = open(get_json_save_filename(season, game), 'rb')
+        r = open(filename, 'rb')
         page = r.read()
         r.close()
 
@@ -121,6 +194,98 @@ def parse_game(season, game, force_overwrite = False):
         update_quick_gamelog_from_json(data)
 
         events = read_events_from_json(data['liveData']['plays']['allPlays'])
+
+        pbp_compressed = zlib.compress(bytes(events, encoding = 'latin-1'), level=9)
+        w = open(filename, 'wb')
+        w.write(pbp_compressed)
+        w.close()
+
+    filename = get_parsed_shifts_save_filename(season, game)
+    if (force_overwrite or not os.path.exists(filename)):
+        r = open(filename, 'rb')
+        page = r.read()
+        r.close()
+
+        page = zlib.decompress(page)
+        data = json.loads(page.decode('latin-1'))
+
+        try:
+            thisgamedata = scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d} & Game == {1:d}'.format(season, game))
+            rname = thisgamedata['Away'].iloc[0]
+            hname = thisgamedata['Home'].iloc[0]
+        except Exception as e:
+            hname = None
+            rname = None
+
+        shifts = read_shifts_from_json(data['data'], hname, rname)
+
+        shifts_compressed = zlib.compress(bytes(shifts, encoding = 'latin-1'), level=9)
+        w = open(filename, 'wb')
+        w.write(shifts_compressed)
+        w.close()
+
+def read_shifts_from_json(data, homename = None, roadname = None):
+
+    ids = ['' for i in range(len(data))]
+    periods = [0 for i in range(len(data))]
+    starts = ['0:00' for i in range(len(data))]
+    ends = ['0:00' for i in range(len(data))]
+    teams = ['' for i in range(len(data))]
+    durations = [0 for i in range(len(data))]
+
+    for i, dct in enumerate(data):
+        ids[i] = dct['playerId']
+        periods[i] = dct['period']
+        starts[i] = dct['startTime']
+        ends[i] = dct['endTime']
+        durations[i] = dct['duration']
+        teams[i] = dct['teamAbbrev']
+
+    ### Seems like home players come first
+    if homename is None:
+        homename = teams[0]
+        for i in range(len(teams) - 1, 0, -1):
+            if not teams[i] == homename:
+                roadname = teams[i]
+                break
+
+    startmin = [x[:x.index(':')] for x in starts]
+    startsec = [x[x.index(':') + 1:] for x in starts]
+    starttimes = [1200 * (p-1) + 60 * (m - 1) + (60 - s) for p, m, s in zip(periods, startmin, startsec)]
+    endmin = [x[:x.index(':')] for x in ends]
+    endsec = [x[x.index(':') + 1:] for x in ends]
+    endtimes = [1200 * (p - 1) + 60 * (m - 1) + (60 - s) for p, m, s in zip(periods, endmin, endsec)]
+
+    import pandas as pd
+    df = pd.DataFrame({'PlayerID': ids, 'Period': periods, 'Start': starttimes, 'End': endtimes,
+                       'Team': teams, 'Duration': durations})
+    ### TODO: fill in code here for goalies who can have a shift start and shift end in different periods
+    ### All I need to do is see whether I subtract 1200 from start or add 1200 to end
+    tempdf = df[['PlayerID', 'Start', 'End', 'Team']]
+    tempdf = tempdf.assign(Time = tempdf.Start)
+
+    toi = pd.DataFrame({'Time': [i for i in range(0, max(df.End) + 1)]})
+
+    toidfs = []
+    while len(tempdf.index) > 0:
+        temptoi = toi.merge(tempdf, how = 'inner', on = 'Time')
+        toidfs.append(temptoi)
+
+        tempdf = tempdf.assign(Time = tempdf.Time + 1)
+        tempdf = tempdf.query('Time <= End')
+
+    ### Append team name to start of columns by team
+    hdf = tempdf.query('Team == "' + homename + '"').groupby('Time').rank()
+    hdf['rank'] = homename + hdf.rank.astype('str')
+    rdf = tempdf.query('Team == "' + roadname + '"').groupby('Time').rank()
+    rdf['rank'] = roadname + rdf.rank.astype('str')
+
+    hdf = hdf.pivot(index = 'Time', columns = 'rank', values = 'PlayerID')
+    rdf = rdf.pivot(index='Time', columns='rank', values='PlayerID')
+
+    toi = toi.merge(hdf, how = 'left', by = 'Time').merge(rdf, how = 'left', by = 'Time')
+
+    return(toi)
 
 def update_player_ids_from_json(teamdata):
     """
@@ -150,33 +315,33 @@ def update_player_ids_from_json(teamdata):
     nums = [-1 for i in range(numplayers)]
     handedness = ['' for i in range(numplayers)]
 
-    for pid, pdata in awayplayers.items():
+    for i, (pid, pdata) in enumerate(awayplayers.items()):
         idnum = pid[2:]
         name = pdata['person']['fullName']
         hand = pdata['person']['shootsCatches']
         num = pdata['jerseyNumber']
         pos = pdata['position']['code']
 
-        ids.append(idnum)
-        names.append(name)
-        teams.append(teams['R'][0])
-        positions.append(pos)
-        nums.append(num)
-        handedness.append(hand)
+        ids[i] = idnum
+        names[i] = name
+        teams[i] = teams['R'][0]
+        positions[i] = pos
+        nums[i] = num
+        handedness[i] = hand
 
-    for pid, pdata in homeplayers.items():
+    for i, (pid, pdata) in enumerate(homeplayers.items()):
         idnum = pid[2:]
         name = pdata['person']['fullName']
         hand = pdata['person']['shootsCatches']
         num = pdata['jerseyNumber']
         pos = pdata['position']['code']
 
-        ids.append(idnum)
-        names.append(name)
-        teams.append(teams['H'][0])
-        positions.append(pos)
-        nums.append(num)
-        handedness.append(hand)
+        ids[i + len(awayplayers)] = idnum
+        names[i + len(awayplayers)] = name
+        teams[i + len(awayplayers)] = teams['H'][0]
+        positions[i + len(awayplayers)] = pos
+        nums[i + len(awayplayers)] = num
+        handedness[i + len(awayplayers)] = hand
 
     import pandas as pd
     gamedf = pd.DataFrame({'ID': ids,
@@ -248,5 +413,3 @@ def read_events_from_json(pbp):
         Dataframe of the game's play by play data
     """
     pass
-
-#scrape_game(2007, 20001)

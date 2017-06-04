@@ -1,3 +1,4 @@
+import scrapenhl_globals
 import scrape_game
 
 def scrape_games(season, games, force_overwrite = False, pause = 1, marker = 10):
@@ -27,8 +28,11 @@ def scrape_full_season(season, startgame = 20001, force_overwrite = False, pause
     games = [g for g in games if g >= startgame]
     scrape_games(season, games, force_overwrite, pause, 10)
 
+def update_teamlogs(season):
+    pass
+
 def update_playerlog():
     pass
 
-for season in range(2010, 2017):
-    scrape_full_season(2010)
+for season in range(2007, 2017):
+    scrape_full_season(season)
