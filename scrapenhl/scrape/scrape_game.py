@@ -264,14 +264,17 @@ def read_shifts_from_json(data, homename = None, roadname = None):
     starttimes = [1200 * (p-1) + 60 * int(m) + int(s) for p, m, s in zip(periods, startmin, startsec)]
     endmin = [x[:x.index(':')] for x in ends]
     endsec = [x[x.index(':') + 1:] for x in ends]
-    endtimes = [1200 * (p - 1) + 60 * int(m) + int(s) for p, m, s in zip(periods, endmin, endsec)]
+    ### There is an extra -1 in endtimes to avoid overlapping start/end
+    endtimes = [1200 * (p - 1) + 60 * int(m) + int(s) - 1 for p, m, s in zip(periods, endmin, endsec)]
+
+    durationtime = [e - s for s, e in zip(starttimes, endtimes)]
 
     import pandas as pd
     df = pd.DataFrame({'PlayerID': ids, 'Period': periods, 'Start': starttimes, 'End': endtimes,
-                       'Team': teams, 'Duration': durations})
+                       'Team': teams, 'Duration': durationtime})
     ### TODO: fill in code here for goalies who can have a shift start and shift end in different periods
     ### All I need to do is see whether I subtract 1200 from start or add 1200 to end
-    tempdf = df[['PlayerID', 'Start', 'End', 'Team']]
+    tempdf = df[['PlayerID', 'Start', 'End', 'Team', 'Duration']]
     tempdf = tempdf.assign(Time = tempdf.Start)
     #print(tempdf.head(20))
 
@@ -301,10 +304,25 @@ def read_shifts_from_json(data, homename = None, roadname = None):
     rdf2['rank'] = rdf2['rank'].apply(lambda x: int(x))
     rdf['rank'] = roadname + rdf2['rank'].astype('str')
 
-    hdf = hdf.pivot(index = 'Time', columns = 'rank', values = 'PlayerID') ### TODO why am I getting 7-13 players sometimes?
-    rdf = rdf.pivot(index='Time', columns='rank', values='PlayerID')
+    ### Occasionally bad entries make duplicates on time and rank. Take one with longer duration
 
-    toi = toi.merge(hdf, how = 'left', by = 'Time').merge(rdf, how = 'left', by = 'Time')
+    tokeep = hdf.sort_values(by = 'Duration', ascending = False)
+    tokeep = tokeep.groupby(['Time', 'PlayerID']).first()
+    tokeep.reset_index(inplace = True)
+    hdf = hdf.merge(tokeep, how = 'inner', on = ['Time', 'PlayerID', 'Start', 'End', 'Team', 'rank'])
+
+    tokeep = rdf.sort_values(by='Duration', ascending=False)
+    tokeep = tokeep.groupby(['Time', 'PlayerID']).first()
+    tokeep.reset_index(inplace=True)
+    rdf = rdf.merge(tokeep, how='inner', on=['Time', 'PlayerID', 'Start', 'End', 'Team', 'rank'])
+
+    ### Remove values above 6--looking like there won't be many
+    hdf = hdf.pivot(index = 'Time', columns = 'rank', values = 'PlayerID').iloc[:, 1:6]
+    hdf.reset_index(inplace = True) #get time back as a column
+    rdf = rdf.pivot(index='Time', columns='rank', values='PlayerID').iloc[:, 1:6]
+    rdf.reset_index(inplace = True)
+
+    toi = toi.merge(hdf, how = 'left', on = 'Time').merge(rdf, how = 'left', on = 'Time')
 
     return(toi)
 

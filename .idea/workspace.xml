@@ -5,7 +5,6 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py" afterPath="$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py" afterPath="$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapenhl/scrape/scrapenhl_globals.py" afterPath="$PROJECT_DIR$/scrapenhl/scrape/scrapenhl_globals.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -30,21 +29,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="scrape_game.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="scrape_game.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="283">
-              <caret line="303" column="124" lean-forward="false" selection-start-line="303" selection-start-column="124" selection-end-line="303" selection-end-column="124" />
+            <state relative-caret-position="-1676">
+              <caret line="326" column="0" lean-forward="false" selection-start-line="326" selection-start-column="0" selection-end-line="326" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="scrape_season.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="scrape_season.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="411">
-              <caret line="183" column="0" lean-forward="false" selection-start-line="183" selection-start-column="0" selection-end-line="183" selection-end-column="0" />
+            <state relative-caret-position="315">
+              <caret line="192" column="34" lean-forward="false" selection-start-line="192" selection-start-column="34" selection-end-line="192" selection-end-column="34" />
               <folding>
                 <element signature="e#0#24#0" expanded="true" />
               </folding>
@@ -111,9 +110,9 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="150" />
+    <option name="x" value="136" />
     <option name="y" value="23" />
-    <option name="width" value="1271" />
+    <option name="width" value="1304" />
     <option name="height" value="772" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
@@ -465,7 +464,14 @@
       <option name="project" value="LOCAL" />
       <updated>1496547382313</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="Working on toi matrix">
+      <created>1496553529077</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1496553529078</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TodoView">
@@ -478,9 +484,9 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="150" y="23" width="1271" height="772" extended-state="0" />
+    <frame x="136" y="23" width="1304" height="772" extended-state="0" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2061369" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20092024" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32859176" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -513,7 +519,8 @@
     <MESSAGE value="Added license and manifest. Added shift files and parsing." />
     <MESSAGE value="Added team log methods" />
     <MESSAGE value="Added imports to pbpmethods, docs to scrape_game, autoupdate method to scrape_season, MAX_SEASON to scrape globals" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added imports to pbpmethods, docs to scrape_game, autoupdate method to scrape_season, MAX_SEASON to scrape globals" />
+    <MESSAGE value="Working on toi matrix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Working on toi matrix" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -525,11 +532,11 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py</url>
-          <line>295</line>
-          <option name="timeStamp" value="28" />
+          <line>231</line>
+          <option name="timeStamp" value="35" />
         </line-breakpoint>
       </breakpoints>
-      <option name="time" value="29" />
+      <option name="time" value="36" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -692,21 +699,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py">
+    <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/pandas/core/reshape/reshape.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="283">
-          <caret line="303" column="124" lean-forward="false" selection-start-line="303" selection-start-column="124" selection-end-line="303" selection-end-column="124" />
+        <state relative-caret-position="131">
+          <caret line="147" column="0" lean-forward="false" selection-start-line="147" selection-start-column="0" selection-end-line="147" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/pandas/core/indexes/base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="131">
+          <caret line="2394" column="0" lean-forward="false" selection-start-line="2394" selection-start-column="0" selection-end-line="2394" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="411">
-          <caret line="183" column="0" lean-forward="false" selection-start-line="183" selection-start-column="0" selection-end-line="183" selection-end-column="0" />
+        <state relative-caret-position="315">
+          <caret line="192" column="34" lean-forward="false" selection-start-line="192" selection-start-column="34" selection-end-line="192" selection-end-column="34" />
           <folding>
             <element signature="e#0#24#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1676">
+          <caret line="326" column="0" lean-forward="false" selection-start-line="326" selection-start-column="0" selection-end-line="326" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
