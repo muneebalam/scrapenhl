@@ -213,5 +213,6 @@ def autoupdate(season = scrapenhl_globals.MAX_SEASON):
     #scrape_games(season, completed_games)
     parse_games(season, completed_games)
 
-for season in range(2007, 2017):
+for season in range(2008, 2017):
     autoupdate(season)
+#scrapenhl_globals.write_correct_playername_file()

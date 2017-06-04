@@ -52,7 +52,7 @@ def get_json_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game.zlib
     """
-    return '{0:s}/{1:d}/{2:d}.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return '{0:s}{1:d}/{2:d}.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
 
 def get_shift_save_filename(season, game):
     """
@@ -478,7 +478,10 @@ def update_quick_gamelog_from_json(data):
     season = int(str(data['gameData']['game']['pk'])[:4])
     game = int(str(data['gameData']['game']['pk'])[4:])
     datetime = data['gameData']['datetime']['dateTime']
-    venue = data['gameData']['venue']['name']
+    try:
+        venue = data['gameData']['venue']['name']
+    except KeyError:
+        venue = 'N/A'
     hname = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(data['gameData']['teams']['home']['id']))
     hname = hname['Abbreviation'].iloc[0]
     rname = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(data['gameData']['teams']['away']['id']))
