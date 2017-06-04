@@ -61,21 +61,16 @@ def get_player_id_file():
     else:
         return feather.read_dataframe(PLAYER_ID_FILE)
 
-def write_player_id_file(df):
+def write_player_id_file():
     """
     Writes the player id file to disk in feather format
 
     This file maps player IDs to names, positions, handedness, teams, and jersey numbers. Using IDs is a way to avoid
     having to correct the numerous spelling inconsistencies in the data.
-
-    Parameters
-    -----------
-    df : Pandas dataframe
-        The player ID dataframe
     """
     import feather
-    df.sort_values(by = "ID", inplace = True)
-    feather.write_dataframe(df, PLAYER_ID_FILE)
+    PLAYER_IDS.sort_values(by = "ID", inplace = True)
+    feather.write_dataframe(PLAYER_IDS, PLAYER_ID_FILE)
 
 def get_quick_gamelog_file():
     """
@@ -102,20 +97,16 @@ def get_quick_gamelog_file():
     else:
         return feather.read_dataframe(BASIC_GAMELOG_FILE)
 
-def write_quick_gamelog_file(df):
+def write_quick_gamelog_file():
     """
-    Writes the game log dataframe to disk in feather format
-
-    Parameters
-    -----------
-    df : Pandas dataframe
-        The basic game log dataframe
+    Writes the game log dataframe (in global namespace) to disk in feather format
     """
     import feather
-    df.sort_values(by = ['Season', 'Game'], inplace = True)
-    feather.write_dataframe(df, BASIC_GAMELOG_FILE)
+    BASIC_GAMELOG.sort_values(by = ['Season', 'Game'], inplace = True)
+    feather.write_dataframe(BASIC_GAMELOG, BASIC_GAMELOG_FILE)
 
 
 PLAYER_IDS = get_player_id_file()
 BASIC_GAMELOG = get_quick_gamelog_file()
+#print(PLAYER_IDS.head())
 

@@ -157,6 +157,10 @@ def get_season_schedule_url(season):
     return 'https://statsapi.web.nhl.com/api/v1/schedule?startDate={0:d}-09-01&endDate={1:d}-06-25'.format(season,
                                                                                                            season + 1)
 
+def parse_games(season, games, force_overwrite = False):
+    for game in games:
+        scrape_game.parse_game(season, game, force_overwrite)
+
 def autoupdate(season = scrapenhl_globals.MAX_SEASON):
     """
     Scrapes unscraped games for the specified season.
@@ -178,13 +182,13 @@ def autoupdate(season = scrapenhl_globals.MAX_SEASON):
     jsonpage = json.loads(page)
     completed_games = set()
 
-    for gameday in page['dates']:
+    for gameday in jsonpage['dates']:
         for game in gameday['games']:
-            if game['status']['statusCode'] == 'Final':
-                completed_games.add(game['gamePk'])
+            if game['status']['abstractGameState'] == 'Final':
+                completed_games.add(int(str(game['gamePk'])[-5:]))
 
     scrape_games(season, completed_games)
-
+    #parse_games(season, completed_games)
 
 for season in range(2007, 2017):
-    scrape_full_season(season)
+    autoupdate(season)

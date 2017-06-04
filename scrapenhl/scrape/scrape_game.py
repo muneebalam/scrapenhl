@@ -70,7 +70,7 @@ def get_shift_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game_shifts.zlib
     """
-    return '{0:s}/{1:d}/{2:d}_shifts.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return '{0:s}{1:d}/{2:d}_shifts.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
 
 def get_parsed_save_filename(season, game):
     """
@@ -88,7 +88,7 @@ def get_parsed_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game_parsed.zlib
     """
-    return '{0:s}/{1:d}/{2:d}_parsed.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return '{0:s}{1:d}/{2:d}_parsed.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
 
 def get_parsed_shifts_save_filename(season, game):
     """
@@ -191,7 +191,7 @@ def parse_game(season, game, force_overwrite = False):
     import json
     filename = get_parsed_save_filename(season, game)
     if (force_overwrite or not os.path.exists(filename)):
-        r = open(filename, 'rb')
+        r = open(get_json_save_filename(season, game), 'rb')
         page = r.read()
         r.close()
 
@@ -205,14 +205,14 @@ def parse_game(season, game, force_overwrite = False):
 
         events = read_events_from_json(data['liveData']['plays']['allPlays'])
 
-        pbp_compressed = zlib.compress(bytes(events, encoding = 'latin-1'), level=9)
-        w = open(filename, 'wb')
-        w.write(pbp_compressed)
-        w.close()
+        #pbp_compressed = zlib.compress(bytes(events, encoding = 'latin-1'), level=9)
+        #w = open(filename, 'wb')
+        #w.write(pbp_compressed)
+        #w.close()
 
     filename = get_parsed_shifts_save_filename(season, game)
     if (force_overwrite or not os.path.exists(filename)):
-        r = open(filename, 'rb')
+        r = open(get_shift_save_filename(season, game), 'rb')
         page = r.read()
         r.close()
 
@@ -261,10 +261,10 @@ def read_shifts_from_json(data, homename = None, roadname = None):
 
     startmin = [x[:x.index(':')] for x in starts]
     startsec = [x[x.index(':') + 1:] for x in starts]
-    starttimes = [1200 * (p-1) + 60 * (m - 1) + (60 - s) for p, m, s in zip(periods, startmin, startsec)]
+    starttimes = [1200 * (p-1) + 60 * int(m) + int(s) for p, m, s in zip(periods, startmin, startsec)]
     endmin = [x[:x.index(':')] for x in ends]
     endsec = [x[x.index(':') + 1:] for x in ends]
-    endtimes = [1200 * (p - 1) + 60 * (m - 1) + (60 - s) for p, m, s in zip(periods, endmin, endsec)]
+    endtimes = [1200 * (p - 1) + 60 * int(m) + int(s) for p, m, s in zip(periods, endmin, endsec)]
 
     import pandas as pd
     df = pd.DataFrame({'PlayerID': ids, 'Period': periods, 'Start': starttimes, 'End': endtimes,
@@ -273,6 +273,7 @@ def read_shifts_from_json(data, homename = None, roadname = None):
     ### All I need to do is see whether I subtract 1200 from start or add 1200 to end
     tempdf = df[['PlayerID', 'Start', 'End', 'Team']]
     tempdf = tempdf.assign(Time = tempdf.Start)
+    #print(tempdf.head(20))
 
     toi = pd.DataFrame({'Time': [i for i in range(0, max(df.End) + 1)]})
 
@@ -284,13 +285,23 @@ def read_shifts_from_json(data, homename = None, roadname = None):
         tempdf = tempdf.assign(Time = tempdf.Time + 1)
         tempdf = tempdf.query('Time <= End')
 
-    ### Append team name to start of columns by team
-    hdf = tempdf.query('Team == "' + homename + '"').groupby('Time').rank()
-    hdf['rank'] = homename + hdf.rank.astype('str')
-    rdf = tempdf.query('Team == "' + roadname + '"').groupby('Time').rank()
-    rdf['rank'] = roadname + rdf.rank.astype('str')
+    tempdf = pd.concat(toidfs)
+    tempdf = tempdf.sort_values(by = 'Time')
 
-    hdf = hdf.pivot(index = 'Time', columns = 'rank', values = 'PlayerID')
+    ### Append team name to start of columns by team
+    hdf = tempdf.query('Team == "' + homename + '"')
+    hdf2 = hdf.groupby('Time').rank()
+    hdf2 = hdf2.rename(columns = {'PlayerID': 'rank'})
+    hdf2['rank'] = hdf2['rank'].apply(lambda x: int(x))
+    hdf['rank'] = homename + hdf2['rank'].astype('str')
+
+    rdf = tempdf.query('Team == "' + roadname + '"')
+    rdf2 = rdf.groupby('Time').rank()
+    rdf2 = rdf2.rename(columns={'PlayerID': 'rank'})
+    rdf2['rank'] = rdf2['rank'].apply(lambda x: int(x))
+    rdf['rank'] = roadname + rdf2['rank'].astype('str')
+
+    hdf = hdf.pivot(index = 'Time', columns = 'rank', values = 'PlayerID') ### TODO why am I getting 7-13 players sometimes?
     rdf = rdf.pivot(index='Time', columns='rank', values='PlayerID')
 
     toi = toi.merge(hdf, how = 'left', by = 'Time').merge(rdf, how = 'left', by = 'Time')
@@ -309,7 +320,7 @@ def update_player_ids_from_json(teamdata):
     teamdata : dict
         A json dict that is the result of api_page['liveData']['boxscore']['teams']
     """
-    teams = {'R': [teamdata['away']['team']['abbreviation'],
+    teamnames = {'R': [teamdata['away']['team']['abbreviation'],
              teamdata['away']['team']['name']],
              'H': [teamdata['home']['team']['abbreviation'],
                  teamdata['home']['team']['name']]}
@@ -334,7 +345,7 @@ def update_player_ids_from_json(teamdata):
 
         ids[i] = idnum
         names[i] = name
-        teams[i] = teams['R'][0]
+        teams[i] = teamnames['R'][0]
         positions[i] = pos
         nums[i] = num
         handedness[i] = hand
@@ -348,7 +359,7 @@ def update_player_ids_from_json(teamdata):
 
         ids[i + len(awayplayers)] = idnum
         names[i + len(awayplayers)] = name
-        teams[i + len(awayplayers)] = teams['H'][0]
+        teams[i + len(awayplayers)] = teamnames['H'][0]
         positions[i + len(awayplayers)] = pos
         nums[i + len(awayplayers)] = num
         handedness[i + len(awayplayers)] = hand
@@ -362,14 +373,17 @@ def update_player_ids_from_json(teamdata):
                            'Hand': handedness})
     ### Find change in length and join
     oldlength = len(scrapenhl_globals.PLAYER_IDS)
-    scrapenhl_globals.PLAYER_IDS = scrapenhl_globals.PLAYER_IDS.merge(
-        gamedf, how = 'outer', on = gamedf.columns)
+    if(oldlength == 0):
+        scrapenhl_globals.PLAYER_IDS = gamedf
+    else:
+        scrapenhl_globals.PLAYER_IDS = scrapenhl_globals.PLAYER_IDS.merge(
+            gamedf, how = 'outer', on = ['ID', 'Name', 'Team', 'Pos', '#', 'Hand'])
     newlength = len(scrapenhl_globals.PLAYER_IDS)
 
     ### Write to disk again immediately in case an error later crashes script
     ### This is in feather format for quick read/write
     if newlength > oldlength:
-        scrapenhl_globals.PLAYER_IDS.write_player_id_file(scrapenhl_globals.PLAYER_IDS)
+        scrapenhl_globals.write_player_id_file()
 
 def update_quick_gamelog_from_json(data):
     """
@@ -401,10 +415,11 @@ def update_quick_gamelog_from_json(data):
                            'Away': [rname], 'AwayCoach': [rcoach], 'AwayScore': [rscore]})
     oldlength = len(scrapenhl_globals.BASIC_GAMELOG)
     scrapenhl_globals.BASIC_GAMELOG = scrapenhl_globals.BASIC_GAMELOG.merge(
-        gamedf, how='outer', on = gamedf.columns)
+        gamedf, how='outer', on = ['Season', 'Game', 'Datetime', 'Venue', 'Home', 'HomeCoach', 'HomeScore',
+                                   'Away', 'AwayCoach', 'AwayScore'])
     newlength = len(scrapenhl_globals.BASIC_GAMELOG)
     if newlength > oldlength:
-        scrapenhl_globals.write_player_id_file(scrapenhl_globals.BASIC_GAMELOG)
+        scrapenhl_globals.write_quick_gamelog_file()
 
 def read_events_from_json(pbp):
     """
@@ -422,4 +437,5 @@ def read_events_from_json(pbp):
     pandas df
         Dataframe of the game's play by play data
     """
+    ### TODO fill this out
     pass
