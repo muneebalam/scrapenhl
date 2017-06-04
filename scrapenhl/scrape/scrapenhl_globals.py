@@ -5,6 +5,7 @@ File and folder paths, and other variables needed by all modules in this package
 SAVE_FOLDER = "/Users/muneebalam/PycharmProjects/scrapenhl/scrapenhl/scrape/"
 PLAYER_ID_FILE = "{0:s}playerids.feather".format(SAVE_FOLDER)
 BASIC_GAMELOG_FILE = "{0:s}quickgamelog.feather".format(SAVE_FOLDER)
+MAX_SEASON = 2016
 
 def create_season_folder(season):
     """

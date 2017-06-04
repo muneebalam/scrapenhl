@@ -121,13 +121,21 @@ def scrape_game(season, game, force_overwrite = False):
         The preseason, all-star game, Olympics, and World Cup also have game IDs that can be provided.
     force_overwrite : bool
         If True, will overwrite previously raw html files. If False, will not scrape if files already found.
+
+    Returns
+    -------
+    bool
+        A boolean indicating whether the NHL API was queried.
     """
+    query = False
+
     import os.path
     url = get_url(season, game)
     filename = get_json_save_filename(season, game)
     if force_overwrite or not os.path.exists(filename):
         import urllib.request
         try:
+            query = True
             with urllib.request.urlopen(url) as reader:
                 page = reader.read()
         except Exception as e:
@@ -146,6 +154,7 @@ def scrape_game(season, game, force_overwrite = False):
     if force_overwrite or not os.path.exists(filename):
         import urllib.request
         try:
+            query = True
             with urllib.request.urlopen(url) as reader:
                 page = reader.read()
         except Exception as e:
@@ -159,6 +168,7 @@ def scrape_game(season, game, force_overwrite = False):
             w.write(page2)
             w.close()
 
+    return query
 
 def parse_game(season, game, force_overwrite = False):
     """
