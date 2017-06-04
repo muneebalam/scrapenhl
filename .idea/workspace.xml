@@ -3,9 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="d78adebc-1e37-43fd-98fc-e864ab654f2c" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py" afterPath="$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py" afterPath="$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/scrapenhl/scrape/scrapenhl_globals.py" afterPath="$PROJECT_DIR$/scrapenhl/scrape/scrapenhl_globals.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -504,7 +501,14 @@
       <option name="project" value="LOCAL" />
       <updated>1496607570677</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="Dropping duplicates">
+      <created>1496614327621</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1496614327621</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TodoView">
@@ -518,7 +522,6 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="136" y="23" width="1304" height="772" extended-state="0" />
-    <editor active="true" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20092024" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -557,7 +560,8 @@
     <MESSAGE value="Fixed start/end overlap issue, multiple shifts error, and pivot to wide in toi matrix" />
     <MESSAGE value="Writing shift matrices to hdf5 instead of zlib" />
     <MESSAGE value="Added team id file and changed code to read from there when possible" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added team id file and changed code to read from there when possible" />
+    <MESSAGE value="Dropping duplicates" />
+    <option name="LAST_COMMIT_MESSAGE" value="Dropping duplicates" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
