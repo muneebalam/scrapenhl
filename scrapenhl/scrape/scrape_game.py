@@ -201,6 +201,7 @@ def parse_game(season, game, force_overwrite = False):
 
         teamdata = data['liveData']['boxscore']['teams']
 
+        update_team_ids_from_json(teamdata)
         update_player_ids_from_json(teamdata)
         update_quick_gamelog_from_json(data)
 
@@ -333,6 +334,41 @@ def read_shifts_from_json(data, homename = None, roadname = None):
 
     return(toi)
 
+def update_team_ids_from_json(teamdata):
+
+    hid = teamdata['home']['team']['id']
+    if hid not in scrapenhl_globals.TEAM_IDS:
+        import urllib.request
+        import json
+        import pandas as pd
+        url = 'https://statsapi.web.nhl.com{0:s}'.format(teamdata['home']['team']['link'])
+        with urllib.request.urlopen(url) as reader:
+            page = reader.read()
+        teaminfo = json.loads(page.decode('latin-1'))
+        hid = teaminfo['teams'][0]['id']
+        habbrev = teaminfo['teams'][0]['abbreviation']
+        hname = teaminfo['teams'][0]['name']
+
+        df = pd.DataFrame({'ID': [hid], 'Abbreviation': [habbrev], 'Name': [hname]})
+        scrapenhl_globals.TEAM_IDS = pd.concat([scrapenhl_globals.TEAM_IDS, df])
+        scrapenhl_globals.write_team_id_file()
+
+    rid = teamdata['away']['team']['id']
+    if rid not in scrapenhl_globals.TEAM_IDS:
+        import urllib.request
+        import json
+        url = 'https://statsapi.web.nhl.com{0:s}'.format(teamdata['away']['team']['link'])
+        with urllib.request.urlopen(url) as reader:
+            page = reader.read()
+        teaminfo = json.loads(page.decode('latin-1'))
+        rid = teaminfo['teams'][0]['id']
+        rabbrev = teaminfo['teams'][0]['abbreviation']
+        rname = teaminfo['teams'][0]['name']
+
+        df = pd.DataFrame({'ID': [rid], 'Abbreviation': [rabbrev], 'Name': [rname]})
+        scrapenhl_globals.TEAM_IDS = pd.concat([scrapenhl_globals.TEAM_IDS, df])
+        scrapenhl_globals.write_team_id_file()
+
 def update_player_ids_from_json(teamdata):
     """
     Creates a data frame of player data from current game's json[liveData][boxscore] to update global PLAYER_IDS.
@@ -345,10 +381,10 @@ def update_player_ids_from_json(teamdata):
     teamdata : dict
         A json dict that is the result of api_page['liveData']['boxscore']['teams']
     """
-    teamnames = {'R': [teamdata['away']['team']['abbreviation'],
-             teamdata['away']['team']['name']],
-             'H': [teamdata['home']['team']['abbreviation'],
-                 teamdata['home']['team']['name']]}
+    rteam = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(teamdata['away']['team']['id']))
+    rabbrev = rteam['Abbreviation'].iloc[0]
+    hteam = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(teamdata['home']['team']['id']))
+    habbrev = hteam['Abbreviation'].iloc[0]
 
     awayplayers = teamdata['away']['players']
     homeplayers = teamdata['home']['players']
@@ -370,13 +406,15 @@ def update_player_ids_from_json(teamdata):
             hand = 'N/A'
         try:
             num = pdata['jerseyNumber']
+            if num == '':
+                raise KeyError
         except KeyError:
             num = -1
         pos = pdata['position']['code']
 
         ids[i] = idnum
         names[i] = name
-        teams[i] = teamnames['R'][0]
+        teams[i] = rabbrev
         positions[i] = pos
         nums[i] = num
         handedness[i] = hand
@@ -390,13 +428,15 @@ def update_player_ids_from_json(teamdata):
             hand = 'N/A'
         try:
             num = pdata['jerseyNumber']
+            if num == '':
+                raise KeyError
         except KeyError:
             num = -1
         pos = pdata['position']['code']
 
         ids[i + len(awayplayers)] = idnum
         names[i + len(awayplayers)] = name
-        teams[i + len(awayplayers)] = teamnames['H'][0]
+        teams[i + len(awayplayers)] = habbrev
         positions[i + len(awayplayers)] = pos
         nums[i + len(awayplayers)] = num
         handedness[i + len(awayplayers)] = hand
@@ -439,10 +479,18 @@ def update_quick_gamelog_from_json(data):
     game = int(str(data['gameData']['game']['pk'])[4:])
     datetime = data['gameData']['datetime']['dateTime']
     venue = data['gameData']['venue']['name']
-    hname = data['gameData']['teams']['home']['triCode']
-    rname = data['gameData']['teams']['away']['triCode']
-    hcoach = data['liveData']['boxscore']['teams']['home']['coaches'][0]['person']['fullName']
-    rcoach = data['liveData']['boxscore']['teams']['away']['coaches'][0]['person']['fullName']
+    hname = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(data['gameData']['teams']['home']['id']))
+    hname = hname['Abbreviation'].iloc[0]
+    rname = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(data['gameData']['teams']['away']['id']))
+    rname = rname['Abbreviation'].iloc[0]
+    try:
+        hcoach = data['liveData']['boxscore']['teams']['home']['coaches'][0]['person']['fullName']
+    except IndexError:
+        hcoach = 'N/A'
+    try:
+        rcoach = data['liveData']['boxscore']['teams']['away']['coaches'][0]['person']['fullName']
+    except IndexError:
+        rcoach = 'N/A'
     hscore = data['liveData']['boxscore']['teams']['home']['teamStats']['teamSkaterStats']['goals']
     rscore = data['liveData']['boxscore']['teams']['away']['teamStats']['teamSkaterStats']['goals']
 

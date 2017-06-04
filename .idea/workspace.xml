@@ -23,28 +23,28 @@
       <file leaf-file-name="scrapenhl_globals.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrapenhl_globals.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="213">
-              <caret line="78" column="0" lean-forward="false" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
+            <state relative-caret-position="307">
+              <caret line="113" column="50" lean-forward="false" selection-start-line="113" selection-start-column="50" selection-end-line="113" selection-end-column="50" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="scrape_game.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="scrape_game.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="129">
-              <caret line="239" column="26" lean-forward="false" selection-start-line="239" selection-start-column="26" selection-end-line="239" selection-end-column="26" />
+            <state relative-caret-position="219">
+              <caret line="492" column="21" lean-forward="false" selection-start-line="492" selection-start-column="21" selection-end-line="492" selection-end-column="21" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="scrape_season.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="scrape_season.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="285">
-              <caret line="189" column="19" lean-forward="true" selection-start-line="189" selection-start-column="19" selection-end-line="189" selection-end-column="19" />
+            <state relative-caret-position="-2510">
+              <caret line="30" column="29" lean-forward="true" selection-start-line="30" selection-start-column="29" selection-end-line="30" selection-end-column="29" />
               <folding>
                 <element signature="e#0#24#0" expanded="true" />
               </folding>
@@ -77,6 +77,13 @@
       <find>update_player_ids_from_json</find>
       <find>compress(</find>
       <find>get_parsed_shifts_save_filename</find>
+      <find>teamnam</find>
+      <find>teamnames =</find>
+      <find>update_player_ids</find>
+      <find>stats</find>
+      <find>concat</find>
+      <find>hname =</find>
+      <find>Phoenix</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -107,8 +114,8 @@
         <option value="$PROJECT_DIR$/scrapenhl/manipulate/chartmethods.py" />
         <option value="$PROJECT_DIR$/scrapenhl/manipulate/pbpmethods.py" />
         <option value="$PROJECT_DIR$/scrapenhl/scrape/scrapenhl_globals.py" />
-        <option value="$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py" />
         <option value="$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py" />
+        <option value="$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py" />
       </list>
     </option>
   </component>
@@ -481,7 +488,14 @@
       <option name="project" value="LOCAL" />
       <updated>1496591715074</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Writing shift matrices to hdf5 instead of zlib">
+      <created>1496598332390</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1496598332390</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TodoView">
@@ -508,7 +522,7 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3997155" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
-      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32898772" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32822084" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -532,11 +546,12 @@
     <MESSAGE value="Added imports to pbpmethods, docs to scrape_game, autoupdate method to scrape_season, MAX_SEASON to scrape globals" />
     <MESSAGE value="Working on toi matrix" />
     <MESSAGE value="Fixed start/end overlap issue, multiple shifts error, and pivot to wide in toi matrix" />
-    <option name="LAST_COMMIT_MESSAGE" value="Fixed start/end overlap issue, multiple shifts error, and pivot to wide in toi matrix" />
+    <MESSAGE value="Writing shift matrices to hdf5 instead of zlib" />
+    <option name="LAST_COMMIT_MESSAGE" value="Writing shift matrices to hdf5 instead of zlib" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="41" />
+      <option name="time" value="44" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -707,14 +722,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrapenhl_globals.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="213">
-          <caret line="78" column="0" lean-forward="false" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda/lib/python3.6/codecs.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="161">
@@ -731,21 +738,29 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py">
+    <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrapenhl_globals.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="129">
-          <caret line="239" column="26" lean-forward="false" selection-start-line="239" selection-start-column="26" selection-end-line="239" selection-end-column="26" />
+        <state relative-caret-position="307">
+          <caret line="113" column="50" lean-forward="false" selection-start-line="113" selection-start-column="50" selection-end-line="113" selection-end-column="50" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_season.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="189" column="19" lean-forward="true" selection-start-line="189" selection-start-column="19" selection-end-line="189" selection-end-column="19" />
+        <state relative-caret-position="-2510">
+          <caret line="30" column="29" lean-forward="true" selection-start-line="30" selection-start-column="29" selection-end-line="30" selection-end-column="29" />
           <folding>
             <element signature="e#0#24#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrapenhl/scrape/scrape_game.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="219">
+          <caret line="492" column="21" lean-forward="false" selection-start-line="492" selection-start-column="21" selection-end-line="492" selection-end-column="21" />
+          <folding />
         </state>
       </provider>
     </entry>

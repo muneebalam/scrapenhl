@@ -31,7 +31,7 @@ def scrape_games(season, games, force_overwrite = False, pause = 1, marker = 10)
             time.sleep(pause)
         if i in marker_i_set:
             print('Done through', season, game, ' ~ ', round((marker_i.index(i)) * 100/marker), '%')
-    print('Done scraping games')
+    print('Done scraping games in', season)
 
 
 def scrape_season(season, startgame = None, endgame = None, force_overwrite = False, pause = 1):
@@ -157,9 +157,32 @@ def get_season_schedule_url(season):
     return 'https://statsapi.web.nhl.com/api/v1/schedule?startDate={0:d}-09-01&endDate={1:d}-06-25'.format(season,
                                                                                                            season + 1)
 
-def parse_games(season, games, force_overwrite = False):
-    for game in games:
+def parse_games(season, games, force_overwrite = False, marker = 10):
+    """
+        Parses the specified games.
+
+        Parameters
+        -----------
+        season : int
+            The season of the game. 2007-08 would be 2007.
+        games : iterable of ints (e.g. list)
+            The game id. This can range from 20001 to 21230 for regular season, and 30111 to 30417 for playoffs.
+            The preseason, all-star game, Olympics, and World Cup also have game IDs that can be provided.
+        force_overwrite : bool
+            If True, will overwrite previously parsed files. If False, will not parise if files already found.
+        marker : float or int
+            The number of times to print progress. 10 will print every 10%; 20 every 5%.
+        """
+    games = sorted(list(games))
+    marker_i = [len(games) // marker * i for i in range(marker)]
+    marker_i[-1] = len(games) - 1
+    marker_i_set = set(marker_i)
+    for i in range(len(games)):
+        game = games[i]
         scrape_game.parse_game(season, game, force_overwrite)
+        if i in marker_i_set:
+            print('Done through', season, game, ' ~ ', round((marker_i.index(i)) * 100 / marker), '%')
+    print('Done parsing games in', season)
 
 def autoupdate(season = scrapenhl_globals.MAX_SEASON):
     """
@@ -190,5 +213,5 @@ def autoupdate(season = scrapenhl_globals.MAX_SEASON):
     #scrape_games(season, completed_games)
     parse_games(season, completed_games)
 
-for season in range(2007, 2016):
+for season in range(2007, 2017):
     autoupdate(season)

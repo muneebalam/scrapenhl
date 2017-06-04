@@ -4,6 +4,7 @@ File and folder paths, and other variables needed by all modules in this package
 
 SAVE_FOLDER = "/Users/muneebalam/PycharmProjects/scrapenhl/scrapenhl/scrape/"
 PLAYER_ID_FILE = "{0:s}playerids.feather".format(SAVE_FOLDER)
+TEAM_ID_FILE = "{0:s}teamids.feather".format(SAVE_FOLDER)
 BASIC_GAMELOG_FILE = "{0:s}quickgamelog.feather".format(SAVE_FOLDER)
 MAX_SEASON = 2016
 
@@ -78,6 +79,40 @@ def write_player_id_file():
     PLAYER_IDS['Hand'] = PLAYER_IDS['Hand'].astype(str)
     feather.write_dataframe(PLAYER_IDS, PLAYER_ID_FILE)
 
+def get_team_id_file():
+    """
+    Returns the team id file
+
+    This file maps team IDs to names and abbreviations.
+
+    If the team ID file is not found, a blank one is created
+
+    Returns
+    --------
+    Pandas df
+        The team id dataframe
+    """
+    import feather
+    import os.path
+    if not os.path.exists(TEAM_ID_FILE):
+        print('Creating blank team ID file for future use')
+        import pandas as pd
+        TEAM_IDS = pd.DataFrame({'ID': [], 'Name': [], 'Abbreviation': []})
+        # write_player_id_file()
+        return TEAM_IDS
+    else:
+        return feather.read_dataframe(TEAM_ID_FILE)
+
+def write_team_id_file():
+    """
+    Writes the team id file to disk in feather format
+
+    This file maps team IDs to names and abbreviations.
+    """
+    import feather
+    PLAYER_IDS.sort_values(by="ID", inplace=True)
+    feather.write_dataframe(TEAM_IDS, TEAM_ID_FILE)
+
 def get_quick_gamelog_file():
     """
     Returns the game log file
@@ -114,5 +149,6 @@ def write_quick_gamelog_file():
 
 PLAYER_IDS = get_player_id_file()
 BASIC_GAMELOG = get_quick_gamelog_file()
+TEAM_IDS = get_team_id_file()
 #print(PLAYER_IDS.head())
 
