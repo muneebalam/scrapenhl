@@ -55,9 +55,9 @@ def get_player_id_file():
     if not os.path.exists(PLAYER_ID_FILE):
         print('Creating blank player ID file for future use')
         import pandas as pd
-        df = pd.DataFrame({'ID': [], 'Name': [], 'Team': [], 'Pos': [], '#': [], 'Hand': []})
-        write_player_id_file(df)
-        return df
+        PLAYER_IDS = pd.DataFrame({'ID': [], 'Name': [], 'Team': [], 'Pos': [], '#': [], 'Hand': []})
+        #write_player_id_file()
+        return PLAYER_IDS
     else:
         return feather.read_dataframe(PLAYER_ID_FILE)
 
@@ -70,6 +70,12 @@ def write_player_id_file():
     """
     import feather
     PLAYER_IDS.sort_values(by = "ID", inplace = True)
+    PLAYER_IDS['#'] = PLAYER_IDS['#'].astype(int)
+    PLAYER_IDS['ID'] = PLAYER_IDS['ID'].astype(str)
+    PLAYER_IDS['Name'] = PLAYER_IDS['Name'].astype(str)
+    PLAYER_IDS['Pos'] = PLAYER_IDS['Pos'].astype(str)
+    PLAYER_IDS['Team'] = PLAYER_IDS['Team'].astype(str)
+    PLAYER_IDS['Hand'] = PLAYER_IDS['Hand'].astype(str)
     feather.write_dataframe(PLAYER_IDS, PLAYER_ID_FILE)
 
 def get_quick_gamelog_file():

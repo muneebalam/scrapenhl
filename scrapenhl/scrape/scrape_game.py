@@ -106,7 +106,7 @@ def get_parsed_shifts_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game_shifts_parsed.zlib
     """
-    return '{0:s}/{1:d}/{2:d}_shifts_parsed.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return '{0:s}/{1:d}/{2:d}_shifts_parsed.hdf5'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
 
 def scrape_game(season, game, force_overwrite = False):
     """
@@ -189,6 +189,7 @@ def parse_game(season, game, force_overwrite = False):
     import os.path
     import zlib
     import json
+    import pandas as pd
     filename = get_parsed_save_filename(season, game)
     if (force_overwrite or not os.path.exists(filename)):
         r = open(get_json_save_filename(season, game), 'rb')
@@ -229,13 +230,19 @@ def parse_game(season, game, force_overwrite = False):
 
         shifts = read_shifts_from_json(data['data'], hname, rname)
 
-        shifts_compressed = zlib.compress(bytes(shifts, encoding = 'latin-1'), level=9)
-        w = open(filename, 'wb')
-        w.write(shifts_compressed)
-        w.close()
+        if shifts is not None:
+            #shifts = ''
+            #shifts_compressed = zlib.compress(shifts, level=9)
+            #w = open(filename, 'wb')
+            #w.write(shifts_compressed)
+            #w.close()
+            shifts.to_hdf(filename, key = 'Game{0:d}0{1:d}'.format(season, game), mode = 'w',
+                          complevel = 9, complib = 'zlib')
 
 def read_shifts_from_json(data, homename = None, roadname = None):
 
+    if len(data) == 0:
+        return
     ids = ['' for i in range(len(data))]
     periods = [0 for i in range(len(data))]
     starts = ['0:00' for i in range(len(data))]
@@ -357,8 +364,14 @@ def update_player_ids_from_json(teamdata):
     for i, (pid, pdata) in enumerate(awayplayers.items()):
         idnum = pid[2:]
         name = pdata['person']['fullName']
-        hand = pdata['person']['shootsCatches']
-        num = pdata['jerseyNumber']
+        try:
+            hand = pdata['person']['shootsCatches']
+        except KeyError:
+            hand = 'N/A'
+        try:
+            num = pdata['jerseyNumber']
+        except KeyError:
+            num = -1
         pos = pdata['position']['code']
 
         ids[i] = idnum
@@ -371,8 +384,14 @@ def update_player_ids_from_json(teamdata):
     for i, (pid, pdata) in enumerate(homeplayers.items()):
         idnum = pid[2:]
         name = pdata['person']['fullName']
-        hand = pdata['person']['shootsCatches']
-        num = pdata['jerseyNumber']
+        try:
+            hand = pdata['person']['shootsCatches']
+        except KeyError:
+            hand = 'N/A'
+        try:
+            num = pdata['jerseyNumber']
+        except KeyError:
+            num = -1
         pos = pdata['position']['code']
 
         ids[i + len(awayplayers)] = idnum

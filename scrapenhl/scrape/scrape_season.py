@@ -187,8 +187,8 @@ def autoupdate(season = scrapenhl_globals.MAX_SEASON):
             if game['status']['abstractGameState'] == 'Final':
                 completed_games.add(int(str(game['gamePk'])[-5:]))
 
-    scrape_games(season, completed_games)
+    #scrape_games(season, completed_games)
     parse_games(season, completed_games)
 
-for season in range(2016, 2015, -1):
+for season in range(2007, 2016):
     autoupdate(season)
