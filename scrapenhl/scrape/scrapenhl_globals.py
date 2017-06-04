@@ -19,6 +19,22 @@ def create_season_folder(season):
     folder = '{0:s}{1:d}/'.format(SAVE_FOLDER, season)
     os.mkdir(folder)
 
+def get_season_folder(season):
+    """
+    Returns season folder in SAVE_FOLDER
+
+    Parameters
+    -----------
+    season : int
+        The season of the game. 2007-08 would be 2007.
+
+    Returns
+    -------
+    str
+        The folder path
+    """
+    return '{0:s}{1:d}/'.format(SAVE_FOLDER, season)
+
 def get_player_id_file():
     """
     Returns the player id file

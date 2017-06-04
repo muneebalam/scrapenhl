@@ -28,8 +28,85 @@ def scrape_full_season(season, startgame = 20001, force_overwrite = False, pause
     games = [g for g in games if g >= startgame]
     scrape_games(season, games, force_overwrite, pause, 10)
 
-def update_teamlogs(season):
+def get_team_pbplog_filename(season, team):
     pass
+
+def get_team_toilog_filename(season, team):
+    pass
+
+def update_teamlogs(season, force_overwrite = False):
+
+    teams = set(
+        scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d}'.format(season))['Team'].value_counts().index())
+
+    ### List files in correct format
+    import os
+    allfiles = os.listdir(scrapenhl_globals.get_season_folder(season))
+
+    pbpfiles = {int(x[:5]): x for x in allfiles if x[-12:] == '_parsed.zlib'}
+    toifiles = {int(x[:5]): x for x in allfiles if x[-19:] == '_shifts_parsed.zlib'}
+
+    ### If force overwrite is false, read current log and see which games are already included
+    games_already_done = set()
+
+    import feather
+    import zlib
+
+    for team in teams:
+        teamgames = scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d} & (Home == "{1:s} | Away == {1:s})'.format(
+            season, team))['Game']
+        try:
+            current_pbp = feather.read_dataframe(get_team_pbplog_filename(season, team))
+            games_already_done = {x for x in current_pbp.Game}
+        except FileNotFoundError:
+            current_pbp = None
+            games_already_done = set()
+
+        dflist = []
+        if not force_overwrite:
+            dflist.append(current_pbp)
+            teamgames = {g for g in teamgames if g not in games_already_done}
+
+        if force_overwrite:
+            for game in teamgames:
+                r = open(scrape_game.get_parsed_save_filename(season, game), 'r')
+                page = r.read()
+                r.close()
+
+                df = zlib.decompress(zlib)
+                dflist.append(df)
+
+        import pandas as pd
+        new_pbp = pd.concat(dflist)
+        feather.write_dataframe(new_pbp, get_team_pbplog_filename(season, team))
+
+        try:
+            current_toi = feather.read_dataframe(get_team_toilog_filename(season, team))
+            games_already_done = {x for x in current_toi.Game}
+        except FileNotFoundError:
+            current_toi = None
+            games_already_done = set()
+
+        dflist = []
+        if not force_overwrite:
+            dflist.append(current_toi)
+            teamgames = {g for g in teamgames if g not in games_already_done}
+
+        if force_overwrite:
+            for game in teamgames:
+                r = open(scrape_game.get_parsed_shifts_save_filename(season, game), 'r')
+                page = r.read()
+                r.close()
+
+                df = zlib.decompress(zlib)
+                ### Columns for players are labeled [Team]1-6, [OppTeam]1-6, so changing opp team names to just 'Opp'
+                df.rename(columns={x: 'Opp{0:s}'.format(x[-1]) for col in df.columns if x[:3] != team},
+                          inplace=True)
+                dflist.append(df)
+
+        import pandas as pd
+        new_toi = pd.concat(dflist)
+        feather.write_dataframe(new_toi, get_team_toilog_filename(season, team))
 
 def update_playerlog():
     pass
