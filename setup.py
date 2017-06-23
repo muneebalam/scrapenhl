@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name = 'scrapenhl',
-      version = '0.1',
+      version = '0.2',
       description = 'Scraping and manipulating NHL PbP data',
       url = 'https://github.com/muneebalam/scrapenhl',
       author = 'Muneeb Alam',
