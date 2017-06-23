@@ -15,6 +15,11 @@ setup(name = 'scrapenhl',
             'scikit-learn',
             'matplotlib',
             'seaborn',
-          'feather-format'
+            'feather-format',
+            'dash',
+            'dash-renderer',
+            'dash-html-components',
+            'dash-core-components',
+            'plotly',
       ],
       zip_safe = False)
