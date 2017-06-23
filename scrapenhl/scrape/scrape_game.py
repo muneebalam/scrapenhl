@@ -191,58 +191,64 @@ def parse_game(season, game, force_overwrite = False):
     import json
     import pandas as pd
     filename = get_parsed_save_filename(season, game)
-    if (force_overwrite or not os.path.exists(filename)):
+    if ((force_overwrite or not os.path.exists(filename)) and os.path.exists(get_json_save_filename(season, game))):
         r = open(get_json_save_filename(season, game), 'rb')
         page = r.read()
         r.close()
 
         page = zlib.decompress(page)
-        data = json.loads(page.decode('latin-1'))
+        try:
+            data = json.loads(page.decode('latin-1'))
 
-        teamdata = data['liveData']['boxscore']['teams']
+            teamdata = data['liveData']['boxscore']['teams']
 
-        update_team_ids_from_json(teamdata)
-        update_player_ids_from_json(teamdata)
-        update_quick_gamelog_from_json(data)
+            update_team_ids_from_json(teamdata)
+            update_player_ids_from_json(teamdata)
+            update_quick_gamelog_from_json(data)
 
-        events = read_events_from_json(data['liveData']['plays']['allPlays'])
+            events = read_events_from_json(data['liveData']['plays']['allPlays'])
 
-        if events is not None:
-            events.to_hdf(filename, key='Game{0:d}0{1:d}'.format(season, game), mode='w',
-                          complevel=9, complib='zlib')
+            if events is not None:
+                events.to_hdf(filename, key='Game{0:d}0{1:d}'.format(season, game), mode='w',
+                              complevel=9, complib='zlib')
 
-        #pbp_compressed = zlib.compress(bytes(events, encoding = 'latin-1'), level=9)
-        #w = open(filename, 'wb')
-        #w.write(pbp_compressed)
-        #w.close()
+            #pbp_compressed = zlib.compress(bytes(events, encoding = 'latin-1'), level=9)
+            #w = open(filename, 'wb')
+            #w.write(pbp_compressed)
+            #w.close()
+        except json.JSONDecodeError:
+            pass
 
     filename = get_parsed_shifts_save_filename(season, game)
-    if (force_overwrite or not os.path.exists(filename)):
+    if ((force_overwrite or not os.path.exists(filename)) and os.path.exists(get_shift_save_filename(season, game))):
         r = open(get_shift_save_filename(season, game), 'rb')
         page = r.read()
         r.close()
 
         page = zlib.decompress(page)
-        data = json.loads(page.decode('latin-1'))
-
         try:
-            thisgamedata = scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d} & Game == {1:d}'.format(season, game))
-            rname = thisgamedata['Away'].iloc[0]
-            hname = thisgamedata['Home'].iloc[0]
-        except Exception as e:
-            hname = None
-            rname = None
+            data = json.loads(page.decode('latin-1'))
 
-        shifts = read_shifts_from_json(data['data'], hname, rname)
+            try:
+                thisgamedata = scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d} & Game == {1:d}'.format(season, game))
+                rname = thisgamedata['Away'].iloc[0]
+                hname = thisgamedata['Home'].iloc[0]
+            except Exception as e:
+                hname = None
+                rname = None
 
-        if shifts is not None:
-            #shifts = ''
-            #shifts_compressed = zlib.compress(shifts, level=9)
-            #w = open(filename, 'wb')
-            #w.write(shifts_compressed)
-            #w.close()
-            shifts.to_hdf(filename, key = 'Game{0:d}0{1:d}'.format(season, game), mode = 'w',
-                          complevel = 9, complib = 'zlib')
+            shifts = read_shifts_from_json(data['data'], hname, rname)
+
+            if shifts is not None:
+                #shifts = ''
+                #shifts_compressed = zlib.compress(shifts, level=9)
+                #w = open(filename, 'wb')
+                #w.write(shifts_compressed)
+                #w.close()
+                shifts.to_hdf(filename, key = 'Game{0:d}0{1:d}'.format(season, game), mode = 'w',
+                              complevel = 9, complib = 'zlib')
+        except json.JSONDecodeError:
+            pass
 
 def read_shifts_from_json(data, homename = None, roadname = None):
 
@@ -284,8 +290,7 @@ def read_shifts_from_json(data, homename = None, roadname = None):
     import pandas as pd
     df = pd.DataFrame({'PlayerID': ids, 'Period': periods, 'Start': starttimes, 'End': endtimes,
                        'Team': teams, 'Duration': durationtime})
-    ### TODO: fill in code here for goalies who can have a shift start and shift end in different periods
-    ### All I need to do is see whether I subtract 1200 from start or add 1200 to end
+    df.loc[df.End < df.Start, 'End'] = df.End + 1200
     tempdf = df[['PlayerID', 'Start', 'End', 'Team', 'Duration']]
     tempdf = tempdf.assign(Time = tempdf.Start)
     #print(tempdf.head(20))
@@ -307,14 +312,14 @@ def read_shifts_from_json(data, homename = None, roadname = None):
     hdf = tempdf.query('Team == "' + homename + '"')
     hdf2 = hdf.groupby('Time').rank()
     hdf2 = hdf2.rename(columns = {'PlayerID': 'rank'})
-    hdf2['rank'] = hdf2['rank'].apply(lambda x: int(x))
-    hdf['rank'] = homename + hdf2['rank'].astype('str')
+    hdf2.loc[:, 'rank'] = hdf2['rank'].apply(lambda x: int(x))
+    hdf.loc[:, 'rank'] = homename + hdf2['rank'].astype('str')
 
     rdf = tempdf.query('Team == "' + roadname + '"')
     rdf2 = rdf.groupby('Time').rank()
     rdf2 = rdf2.rename(columns={'PlayerID': 'rank'})
-    rdf2['rank'] = rdf2['rank'].apply(lambda x: int(x))
-    rdf['rank'] = roadname + rdf2['rank'].astype('str')
+    rdf2.loc[:, 'rank'] = rdf2['rank'].apply(lambda x: int(x))
+    rdf.loc[:, 'rank'] = roadname + rdf2['rank'].astype('str')
 
     ### Occasionally bad entries make duplicates on time and rank. Take one with longer duration
 
@@ -529,7 +534,6 @@ def read_events_from_json(pbp):
     pandas df
         Dataframe of the game's play by play data
     """
-    ### TODO fill this out
 
     import numpy as np
     import pandas as pd
