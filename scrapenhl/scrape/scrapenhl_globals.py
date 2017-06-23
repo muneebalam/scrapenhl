@@ -160,7 +160,8 @@ def write_team_id_file():
     This file maps team IDs to names and abbreviations.
     """
     import feather
-    PLAYER_IDS.sort_values(by="ID", inplace=True)
+    TEAM_IDS.sort_values(by="ID", inplace=True)
+    TEAM_IDS.drop_duplicates(inplace = True)
     feather.write_dataframe(TEAM_IDS, TEAM_ID_FILE)
 
 def get_quick_gamelog_file():
