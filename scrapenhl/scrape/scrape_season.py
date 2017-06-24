@@ -67,10 +67,10 @@ def scrape_season(season, startgame = None, endgame = None, force_overwrite = Fa
     scrape_games(season, games, force_overwrite, pause, 10)
 
 def get_team_pbplog_filename(season, team):
-    return '{0:s}/{1:d}/{2:s}_pbp.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
+    return '{0:s}/Team logs/{2:s}_pbp.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
 
 def get_team_toilog_filename(season, team):
-    return '{0:s}/{1:d}/{2:s}_toi.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
+    return '{0:s}/Team logs/{2:s}_toi.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
 
 def update_teamlogs(season, force_overwrite = False):
 
@@ -214,15 +214,38 @@ def autoupdate(season = scrapenhl_globals.MAX_SEASON):
     scrape_games(season, completed_games)
     parse_games(season, completed_games)
 
+def reparse_season(season = scrapenhl_globals.MAX_SEASON):
+    """
+    Re-parses entire season.
+    :param season: int
+        The season of the game. 2007-08 would be 2007.
+    :return:
+    """
+    import urllib.request
+    url = get_season_schedule_url(season)
+    with urllib.request.urlopen(url) as reader:
+        page = reader.read().decode('latin-1')
 
-#update_teamlogs(2016)
+    import json
+    jsonpage = json.loads(page)
+    completed_games = set()
 
-from urllib.error import URLError
-for season in range(2016, 2017):
-    while True:
-        try:
-            autoupdate(season)
-            break
-        except URLError as e:
-            print(season, e, e.args)
+    for gameday in jsonpage['dates']:
+        for game in gameday['games']:
+            if game['status']['abstractGameState'] == 'Final':
+                completed_games.add(int(str(game['gamePk'])[-5:]))
+
+    parse_games(season, completed_games, True)
+
+reparse_season(2016)
+update_teamlogs(2016)
+
+#from urllib.error import URLError
+#for season in range(2016, 2017):
+#    while True:
+#        try:
+#            autoupdate(season)
+#            break
+#        except URLError as e:
+#            print(season, e, e.args)
 #scrapenhl_globals.write_correct_playername_file()
