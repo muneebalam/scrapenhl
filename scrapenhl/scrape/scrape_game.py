@@ -220,6 +220,7 @@ def parse_game(season, game, force_overwrite = False):
             pass
 
     filename = get_parsed_shifts_save_filename(season, game)
+    basic_gamelog = scrapenhl_globals.get_quick_gamelog_file()
     if ((force_overwrite or not os.path.exists(filename)) and os.path.exists(get_shift_save_filename(season, game))):
         r = open(get_shift_save_filename(season, game), 'rb')
         page = r.read()
@@ -230,7 +231,7 @@ def parse_game(season, game, force_overwrite = False):
             data = json.loads(page.decode('latin-1'))
 
             try:
-                thisgamedata = scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d} & Game == {1:d}'.format(season, game))
+                thisgamedata = basic_gamelog.query('Season == {0:d} & Game == {1:d}'.format(season, game))
                 rname = thisgamedata['Away'].iloc[0]
                 hname = thisgamedata['Home'].iloc[0]
             except Exception as e:
@@ -334,9 +335,10 @@ def read_shifts_from_json(data, homename = None, roadname = None):
     rdf = rdf.merge(tokeep, how='inner', on=['Time', 'PlayerID', 'Start', 'End', 'Team', 'rank'])
 
     ### Remove values above 6--looking like there won't be many
-    hdf = hdf.pivot(index = 'Time', columns = 'rank', values = 'PlayerID').iloc[:, 1:6]
+    ### TODO: keep goalie if one is a goalie!
+    hdf = hdf.pivot(index = 'Time', columns = 'rank', values = 'PlayerID').iloc[:, 0:6]
     hdf.reset_index(inplace = True) #get time back as a column
-    rdf = rdf.pivot(index='Time', columns='rank', values='PlayerID').iloc[:, 1:6]
+    rdf = rdf.pivot(index='Time', columns='rank', values='PlayerID').iloc[:, 0:6]
     rdf.reset_index(inplace = True)
 
     toi = toi.merge(hdf, how = 'left', on = 'Time').merge(rdf, how = 'left', on = 'Time')
@@ -346,7 +348,8 @@ def read_shifts_from_json(data, homename = None, roadname = None):
 def update_team_ids_from_json(teamdata):
 
     hid = teamdata['home']['team']['id']
-    if hid not in scrapenhl_globals.TEAM_IDS:
+    team_ids = scrapenhl_globals.get_team_id_file()
+    if hid not in team_ids:
         import urllib.request
         import json
         import pandas as pd
@@ -359,11 +362,12 @@ def update_team_ids_from_json(teamdata):
         hname = teaminfo['teams'][0]['name']
 
         df = pd.DataFrame({'ID': [hid], 'Abbreviation': [habbrev], 'Name': [hname]})
-        scrapenhl_globals.TEAM_IDS = pd.concat([scrapenhl_globals.TEAM_IDS, df])
-        scrapenhl_globals.write_team_id_file()
+        team_ids = scrapenhl_globals.get_team_id_file()
+        team_ids = pd.concat([team_ids, df])
+        scrapenhl_globals.write_team_id_file(team_ids)
 
     rid = teamdata['away']['team']['id']
-    if rid not in scrapenhl_globals.TEAM_IDS:
+    if rid not in team_ids:
         import urllib.request
         import json
         url = 'https://statsapi.web.nhl.com{0:s}'.format(teamdata['away']['team']['link'])
@@ -375,24 +379,25 @@ def update_team_ids_from_json(teamdata):
         rname = teaminfo['teams'][0]['name']
 
         df = pd.DataFrame({'ID': [rid], 'Abbreviation': [rabbrev], 'Name': [rname]})
-        scrapenhl_globals.TEAM_IDS = pd.concat([scrapenhl_globals.TEAM_IDS, df])
-        scrapenhl_globals.write_team_id_file()
+        team_ids = pd.concat([team_ids, df])
+        scrapenhl_globals.write_team_id_file(team_ids)
 
 def update_player_ids_from_json(teamdata):
     """
-    Creates a data frame of player data from current game's json[liveData][boxscore] to update global PLAYER_IDS.
+    Creates a data frame of player data from current game's json[liveData][boxscore] to update player ids.
 
-    This method reads player ids, names, handedness, team, position, and number, and full joins to PLAYER_IDS.
-    If there are any changes to PLAYER_IDS, the dataframe gets written to disk again.
+    This method reads player ids, names, handedness, team, position, and number, and full joins to player ids.
+    If there are any changes to player ids, the dataframe gets written to disk again.
 
     Parameters
     -----------
     teamdata : dict
         A json dict that is the result of api_page['liveData']['boxscore']['teams']
     """
-    rteam = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(teamdata['away']['team']['id']))
+    team_ids = scrapenhl_globals.get_team_id_file()
+    rteam = team_ids.query('ID == ' + str(teamdata['away']['team']['id']))
     rabbrev = rteam['Abbreviation'].iloc[0]
-    hteam = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(teamdata['home']['team']['id']))
+    hteam = team_ids.query('ID == ' + str(teamdata['home']['team']['id']))
     habbrev = hteam['Abbreviation'].iloc[0]
 
     awayplayers = teamdata['away']['players']
@@ -417,6 +422,8 @@ def update_player_ids_from_json(teamdata):
             num = pdata['jerseyNumber']
             if num == '':
                 raise KeyError
+            else:
+                num = int(num)
         except KeyError:
             num = -1
         pos = pdata['position']['code']
@@ -439,6 +446,8 @@ def update_player_ids_from_json(teamdata):
             num = pdata['jerseyNumber']
             if num == '':
                 raise KeyError
+            else:
+                num = int(num)
         except KeyError:
             num = -1
         pos = pdata['position']['code']
@@ -457,19 +466,14 @@ def update_player_ids_from_json(teamdata):
                            'Pos': positions,
                            '#': nums,
                            'Hand': handedness})
-    ### Find change in length and join
-    oldlength = len(scrapenhl_globals.PLAYER_IDS)
-    if(oldlength == 0):
-        scrapenhl_globals.PLAYER_IDS = gamedf
-    else:
-        scrapenhl_globals.PLAYER_IDS = scrapenhl_globals.PLAYER_IDS.merge(
-            gamedf, how = 'outer', on = ['ID', 'Name', 'Team', 'Pos', '#', 'Hand'])
-    newlength = len(scrapenhl_globals.PLAYER_IDS)
+    gamedf['Count'] = 1
 
-    ### Write to disk again immediately in case an error later crashes script
-    ### This is in feather format for quick read/write
-    if newlength > oldlength:
-        scrapenhl_globals.write_player_id_file()
+    player_ids = scrapenhl_globals.get_player_id_file()
+
+    player_ids = pd.concat([player_ids, gamedf]) \
+        .groupby(['ID', 'Name', 'Team', 'Pos', '#', 'Hand']).sum().reset_index()
+
+    scrapenhl_globals.write_player_id_file(player_ids)
 
 def update_quick_gamelog_from_json(data):
     """
@@ -491,9 +495,10 @@ def update_quick_gamelog_from_json(data):
         venue = data['gameData']['venue']['name']
     except KeyError:
         venue = 'N/A'
-    hname = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(data['gameData']['teams']['home']['id']))
+    team_ids = scrapenhl_globals.get_team_id_file()
+    hname = team_ids.query('ID == ' + str(data['gameData']['teams']['home']['id']))
     hname = hname['Abbreviation'].iloc[0]
-    rname = scrapenhl_globals.TEAM_IDS.query('ID == ' + str(data['gameData']['teams']['away']['id']))
+    rname = team_ids.query('ID == ' + str(data['gameData']['teams']['away']['id']))
     rname = rname['Abbreviation'].iloc[0]
     try:
         hcoach = data['liveData']['boxscore']['teams']['home']['coaches'][0]['person']['fullName']
@@ -510,13 +515,9 @@ def update_quick_gamelog_from_json(data):
     gamedf = pd.DataFrame({'Season': [season], 'Game': [game], 'Datetime': [datetime], 'Venue': [venue],
                            'Home': [hname], 'HomeCoach': [hcoach], 'HomeScore': [hscore],
                            'Away': [rname], 'AwayCoach': [rcoach], 'AwayScore': [rscore]})
-    oldlength = len(scrapenhl_globals.BASIC_GAMELOG)
-    scrapenhl_globals.BASIC_GAMELOG = scrapenhl_globals.BASIC_GAMELOG.merge(
-        gamedf, how='outer', on = ['Season', 'Game', 'Datetime', 'Venue', 'Home', 'HomeCoach', 'HomeScore',
-                                   'Away', 'AwayCoach', 'AwayScore'])
-    newlength = len(scrapenhl_globals.BASIC_GAMELOG)
-    if newlength > oldlength:
-        scrapenhl_globals.write_quick_gamelog_file()
+    basic_gamelog = scrapenhl_globals.get_quick_gamelog_file()
+    basic_gamelog = pd.concat([basic_gamelog, gamedf]).drop_duplicates()
+    scrapenhl_globals.write_quick_gamelog_file(basic_gamelog)
 
 def read_events_from_json(pbp):
     """

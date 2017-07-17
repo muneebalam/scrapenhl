@@ -20,6 +20,8 @@ def scrape_games(season, games, force_overwrite = False, pause = 1, marker = 10)
         The number of times to print progress. 10 will print every 10%; 20 every 5%.
     """
     import time
+    import datetime
+    starttime = time.time()
     games = sorted(list(games))
     marker_i = [len(games)//marker * i for i in range(marker)]
     marker_i[-1] = len(games) - 1
@@ -30,7 +32,8 @@ def scrape_games(season, games, force_overwrite = False, pause = 1, marker = 10)
         if newscrape: #only sleep if had to scrape a new game
             time.sleep(pause)
         if i in marker_i_set:
-            print('Done through', season, game, ' ~ ', round((marker_i.index(i)) * 100/marker), '%')
+            print('Done through', season, game, ' ~ ', round((marker_i.index(i)) * 100/marker), '% in',
+                  str(datetime.timedelta(seconds = time.time() - starttime)))
     print('Done scraping games in', season)
 
 
@@ -67,10 +70,10 @@ def scrape_season(season, startgame = None, endgame = None, force_overwrite = Fa
     scrape_games(season, games, force_overwrite, pause, 10)
 
 def get_team_pbplog_filename(season, team):
-    return '{0:s}/Team logs/{2:s}_pbp.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
+    return '{0:s}/Team logs/{2:s}{1:d}_pbp.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
 
 def get_team_toilog_filename(season, team):
-    return '{0:s}/Team logs/{2:s}_toi.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
+    return '{0:s}/Team logs/{2:s}{1:d}_toi.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
 
 def update_teamlogs(season, force_overwrite = False):
 
@@ -137,22 +140,20 @@ def update_teamlogs(season, force_overwrite = False):
                 df = pd.read_hdf(scrape_game.get_parsed_shifts_save_filename(season, game))
                 df = df.assign(Game = game)
                 cols_to_replace = {col for col in df.columns if str.isdigit(col[-1]) if col[:3] != team}
-                df.rename(columns = {col: 'Opp' + col[-1] for col in cols_to_replace}, inplace = True)
+                df.rename(columns = {col: 'Opp' + col[3:] for col in cols_to_replace}, inplace = True)
                 if df is not None:
                     dflist.append(df)
             except FileNotFoundError:
                 pass
 
         import pandas as pd
+        dflist = [df for df in dflist if df is not None]
         if len(dflist) > 0:
             new_toi = pd.concat(dflist)
             for col in new_toi.columns:
                 if new_toi[col].dtype == 'object':
                     new_toi[col] = new_toi[col].astype(str)
             feather.write_dataframe(new_toi, get_team_toilog_filename(season, team))
-
-def update_playerlog():
-    pass
 
 def get_season_schedule_url(season):
     return 'https://statsapi.web.nhl.com/api/v1/schedule?startDate={0:d}-09-01&endDate={1:d}-06-25'.format(season,
@@ -174,6 +175,11 @@ def parse_games(season, games, force_overwrite = False, marker = 10):
     marker : float or int
         The number of times to print progress. 10 will print every 10%; 20 every 5%.
     """
+    import time
+    import datetime
+
+    starttime = time.time()
+
     games = sorted(list(games))
     marker_i = [len(games) // marker * i for i in range(marker)]
     marker_i[-1] = len(games) - 1
@@ -182,7 +188,8 @@ def parse_games(season, games, force_overwrite = False, marker = 10):
         game = games[i]
         scrape_game.parse_game(season, game, force_overwrite)
         if i in marker_i_set:
-            print('Done through', season, game, ' ~ ', round((marker_i.index(i)) * 100 / marker), '%')
+            print('Done through', season, game, ' ~ ', round((marker_i.index(i)) * 100 / marker), '% in',
+                  str(datetime.timedelta(seconds=time.time() - starttime)))
     print('Done parsing games in', season)
 
 def autoupdate(season = scrapenhl_globals.MAX_SEASON):
@@ -214,13 +221,7 @@ def autoupdate(season = scrapenhl_globals.MAX_SEASON):
     scrape_games(season, completed_games)
     parse_games(season, completed_games)
 
-def reparse_season(season = scrapenhl_globals.MAX_SEASON):
-    """
-    Re-parses entire season.
-    :param season: int
-        The season of the game. 2007-08 would be 2007.
-    :return:
-    """
+def read_completed_games_from_url(season):
     import urllib.request
     url = get_season_schedule_url(season)
     with urllib.request.urlopen(url) as reader:
@@ -234,18 +235,97 @@ def reparse_season(season = scrapenhl_globals.MAX_SEASON):
         for game in gameday['games']:
             if game['status']['abstractGameState'] == 'Final':
                 completed_games.add(int(str(game['gamePk'])[-5:]))
+    return completed_games
 
+def reparse_season(season = scrapenhl_globals.MAX_SEASON):
+    """
+    Re-parses entire season.
+    :param season: int
+        The season of the game. 2007-08 would be 2007.
+    :return:
+    """
+    completed_games = read_completed_games_from_url(season)
     parse_games(season, completed_games, True)
 
-reparse_season(2016)
-update_teamlogs(2016)
 
-#from urllib.error import URLError
-#for season in range(2016, 2017):
-#    while True:
-#        try:
-#            autoupdate(season)
-#            break
-#        except URLError as e:
-#            print(season, e, e.args)
-#scrapenhl_globals.write_correct_playername_file()
+def rewrite_globals(start_from_scratch = True, seasons = None):
+    """
+    Recreates global files: PLAYER_IDS, BASIC_GAMELOG, TEAM_IDS, CORRECTED_PLAYERNAMES
+
+    Parameters
+    -----------
+    seasons : list of int or None
+        The seasons of the games. 2007-08 would be 2007. Should only be provided when start_from_scratch is False.
+    start_from_scratch: bool
+        If True, will search through all files; if False, will look only at missing games in BASIC_GAMELOG.
+        False not yet implemented.
+    """
+
+    import os.path
+    import zlib
+    import json
+    import pandas as pd
+    import time
+    import datetime
+
+    if seasons is None:
+        seasons = [i for i in range(2007, scrapenhl_globals.MAX_SEASON + 1)]
+    elif isinstance(seasons, int):
+        seasons = [seasons]
+
+    if start_from_scratch:
+        import os
+        try:
+            os.remove(scrapenhl_globals.PLAYER_ID_FILE)
+        except FileNotFoundError:
+            pass
+        try:
+            os.remove(scrapenhl_globals.TEAM_ID_FILE)
+        except FileNotFoundError:
+            pass
+        try:
+            os.remove(scrapenhl_globals.BASIC_GAMELOG_FILE)
+        except FileNotFoundError:
+            pass
+
+    for season in seasons:
+
+        starttime = time.time()
+
+        games = read_completed_games_from_url(season)
+
+        marker = 20
+        games = sorted(list(games))
+        marker_i = [len(games) // marker * i for i in range(marker)]
+        marker_i[-1] = len(games) - 1
+        marker_i_set = set(marker_i)
+
+        for i in range(len(games)):
+            game = games[i]
+            print(game)
+            filename = scrape_game.get_parsed_save_filename(season, game)
+            if os.path.exists(scrape_game.get_json_save_filename(season, game)):
+                r = open(scrape_game.get_json_save_filename(season, game), 'rb')
+                page = r.read()
+                r.close()
+
+                page = zlib.decompress(page)
+                try:
+                    data = json.loads(page.decode('latin-1'))
+
+                    teamdata = data['liveData']['boxscore']['teams']
+
+                    scrape_game.update_team_ids_from_json(teamdata)
+                    scrape_game.update_player_ids_from_json(teamdata)
+                    scrape_game.update_quick_gamelog_from_json(data)
+                except json.JSONDecodeError:
+                    pass
+
+            if i in marker_i_set:
+                print('Done through', season, game, ' ~ ', round((marker_i.index(i)) * 100 / marker), '% in ',
+                      str(datetime.timedelta(seconds = time.time() - starttime)))
+
+        print('Done with', season)
+
+
+rewrite_globals(seasons=2016)
