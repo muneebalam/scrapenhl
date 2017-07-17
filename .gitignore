@@ -1,12 +1,6 @@
-.idea/*
 build/bdist.macosx-10.7-x86_64/
 scrapenhl/scrape/*/*_parsed.hdf5a
 scrapenhl/scrape/*/*.zlib
 .DS_Store
-.idea/
-scrapenhl/scrape/2011/
-scrapenhl/scrape/2012/
-scrapenhl/scrape/2013/
-scrapenhl/scrape/2014/
-scrapenhl/scrape/2015/
-scrapenhl/scrape/2016/
+.idea/*
+scrapenhl/data/*/*

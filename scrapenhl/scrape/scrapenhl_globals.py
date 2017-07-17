@@ -6,11 +6,15 @@ SAVE_FOLDER = "../data/"
 PLAYER_ID_FILE = "{0:s}reference/playerids.feather".format(SAVE_FOLDER)
 TEAM_ID_FILE = "{0:s}reference/teamids.feather".format(SAVE_FOLDER)
 BASIC_GAMELOG_FILE = "{0:s}reference/quickgamelog.feather".format(SAVE_FOLDER)
+PLAYER_NAMES_FILE = "{0:s}reference/playerids_names.feather".format(SAVE_FOLDER)
 
 import datetime
-MAX_SEASON = datetime.datetime.now().year
+MAX_SEASON = datetime.datetime.now().year - 1
 if datetime.datetime.now().month >= 9:
     MAX_SEASON += 1
+import feather
+import pandas as pd
+import os.path
 
 def create_season_folder(season):
     """
@@ -55,14 +59,11 @@ def get_player_id_file():
     Pandas df
         The player id dataframe
     """
-    import feather
-    import os.path
     if not os.path.exists(PLAYER_ID_FILE):
         print('Creating blank player ID file for future use')
-        import pandas as pd
-        PLAYER_IDS = pd.DataFrame({'ID': [], 'Name': [], 'Team': [], 'Pos': [], '#': [], 'Hand': [], 'Count': []})
+        df = pd.DataFrame({'ID': [], 'Name': [], 'Team': [], 'Pos': [], '#': [], 'Hand': [], 'Count': []})
         #write_player_id_file()
-        return PLAYER_IDS
+        return df
     else:
         return feather.read_dataframe(PLAYER_ID_FILE)
 
@@ -73,7 +74,6 @@ def write_player_id_file(df):
     This file maps player IDs to names, positions, handedness, teams, and jersey numbers. Using IDs is a way to avoid
     having to correct the numerous spelling inconsistencies in the data.
     """
-    import feather
     df.sort_values(by = "ID", inplace = True)
     df['#'] = df['#'].astype(int)
     df['ID'] = df['ID'].astype(str)
@@ -97,11 +97,8 @@ def get_team_id_file():
     Pandas df
         The team id dataframe
     """
-    import feather
-    import os.path
     if not os.path.exists(TEAM_ID_FILE):
         print('Creating blank team ID file for future use')
-        import pandas as pd
         TEAM_IDS = pd.DataFrame({'ID': [], 'Name': [], 'Abbreviation': []})
         # write_player_id_file()
         return TEAM_IDS
@@ -114,7 +111,6 @@ def write_team_id_file(df):
 
     This file maps team IDs to names and abbreviations.
     """
-    import feather
     df.sort_values(by="ID", inplace=True)
     feather.write_dataframe(df, TEAM_ID_FILE)
 
@@ -130,15 +126,11 @@ def get_quick_gamelog_file():
     Pandas df
         The game log dataframe
     """
-    import feather
-    import os.path
     if not os.path.exists(BASIC_GAMELOG_FILE):
         print('Creating blank game log file for future use')
-        import pandas as pd
         df = pd.DataFrame({'Season': [], 'Game': [], 'Datetime': [], 'Venue': [],
                            'Home': [], 'HomeCoach': [], 'HomeScore': [],
                            'Away': [], 'AwayCoach': [], 'AwayScore': []})
-        #write_quick_gamelog_file()
         return df
     else:
         return feather.read_dataframe(BASIC_GAMELOG_FILE)
@@ -147,10 +139,20 @@ def write_quick_gamelog_file(df):
     """
     Writes the game log dataframe (in global namespace) to disk in feather format
     """
-    import feather
     df.sort_values(by = ['Season', 'Game'], inplace = True)
     df = df.drop_duplicates()
     feather.write_dataframe(df, BASIC_GAMELOG_FILE)
+
+def write_preferred_player_names_file():
+    """
+    Uses player_ids file, assigns most common spelling of name to each ID
+    """
+    df = get_player_id_file()
+    highn = df[['ID', 'Name', 'Count']].groupby(['ID', 'Name']).sum() \
+        .reset_index() \
+        .sort_values(by='Count', ascending=False) \
+        .groupby('ID').first().reset_index()
+    feather.write_dataframe(highn, PLAYER_NAMES_FILE)
 
 
 

@@ -70,32 +70,33 @@ def scrape_season(season, startgame = None, endgame = None, force_overwrite = Fa
     scrape_games(season, games, force_overwrite, pause, 10)
 
 def get_team_pbplog_filename(season, team):
-    return '{0:s}/Team logs/{2:s}{1:d}_pbp.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
+    return '{0:s}Team logs/{2:s}{1:d}_pbp.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
 
 def get_team_toilog_filename(season, team):
-    return '{0:s}/Team logs/{2:s}{1:d}_toi.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
+    return '{0:s}Team logs/{2:s}{1:d}_toi.feather'.format(scrapenhl_globals.SAVE_FOLDER, season, team)
 
 def update_teamlogs(season, force_overwrite = False):
+    import os
+    import feather
+    import pandas as pd
+    import os.path
+
+    basic_gamelog = scrapenhl_globals.get_quick_gamelog_file()
 
     teams = {x for x in \
-        scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d}'.format(season))['Home'].drop_duplicates()} | \
+             basic_gamelog.query('Season == {0:d}'.format(season))['Home'].drop_duplicates()} | \
             {x for x in \
-             scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d}'.format(season))['Away'].drop_duplicates()}
-    temp = scrapenhl_globals.BASIC_GAMELOG
+             basic_gamelog.query('Season == {0:d}'.format(season))['Away'].drop_duplicates()}
+    temp = basic_gamelog
     ### List files in correct format
-    import os
     allfiles = os.listdir(scrapenhl_globals.get_season_folder(season))
 
     pbpfiles = {int(x[:5]): x for x in allfiles if x[-12:] == '_parsed.zlib'}
     toifiles = {int(x[:5]): x for x in allfiles if x[-19:] == '_shifts_parsed.zlib'}
 
-    import feather
-    import pandas as pd
-    import os.path
-
     for team in teams:
-        teamgames = scrapenhl_globals.BASIC_GAMELOG.query('Season == {0:d} & (Home == "{1:s}" | Away == "{1:s}")'.format(
-            season, team))['Game']
+        teamgames = {int(g) for g in basic_gamelog.query('Season == {0:d} & (Home == "{1:s}" | Away == "{1:s}")'.format(
+            season, team))['Game'].values}
         current_pbp = None
         games_already_done = set()
         if os.path.exists(get_team_pbplog_filename(season, team)):
@@ -105,7 +106,7 @@ def update_teamlogs(season, force_overwrite = False):
         dflist = []
         if not force_overwrite and current_pbp is not None:
             dflist.append(current_pbp)
-            teamgames = {g for g in teamgames if g not in games_already_done}
+            teamgames = {int(g) for g in teamgames if g not in games_already_done}
         ### TODO do I need to flip any columns?
         #if force_overwrite:
         for game in teamgames:
@@ -302,7 +303,7 @@ def rewrite_globals(start_from_scratch = True, seasons = None):
 
         for i in range(len(games)):
             game = games[i]
-            print(game)
+            #print(season, game)
             filename = scrape_game.get_parsed_save_filename(season, game)
             if os.path.exists(scrape_game.get_json_save_filename(season, game)):
                 r = open(scrape_game.get_json_save_filename(season, game), 'rb')
@@ -327,5 +328,6 @@ def rewrite_globals(start_from_scratch = True, seasons = None):
 
         print('Done with', season)
 
-
-rewrite_globals(seasons=2016)
+if __name__ == "__main__":
+    #update_teamlogs(2016, True)
+    pass

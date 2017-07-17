@@ -346,13 +346,13 @@ def read_shifts_from_json(data, homename = None, roadname = None):
     return(toi)
 
 def update_team_ids_from_json(teamdata):
+    import urllib.request
+    import json
+    import pandas as pd
 
     hid = teamdata['home']['team']['id']
     team_ids = scrapenhl_globals.get_team_id_file()
-    if hid not in team_ids:
-        import urllib.request
-        import json
-        import pandas as pd
+    if hid not in team_ids.ID.values:
         url = 'https://statsapi.web.nhl.com{0:s}'.format(teamdata['home']['team']['link'])
         with urllib.request.urlopen(url) as reader:
             page = reader.read()
@@ -362,14 +362,11 @@ def update_team_ids_from_json(teamdata):
         hname = teaminfo['teams'][0]['name']
 
         df = pd.DataFrame({'ID': [hid], 'Abbreviation': [habbrev], 'Name': [hname]})
-        team_ids = scrapenhl_globals.get_team_id_file()
         team_ids = pd.concat([team_ids, df])
         scrapenhl_globals.write_team_id_file(team_ids)
 
     rid = teamdata['away']['team']['id']
-    if rid not in team_ids:
-        import urllib.request
-        import json
+    if rid not in team_ids.ID.values:
         url = 'https://statsapi.web.nhl.com{0:s}'.format(teamdata['away']['team']['link'])
         with urllib.request.urlopen(url) as reader:
             page = reader.read()
