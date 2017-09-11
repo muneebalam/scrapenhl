@@ -2,11 +2,14 @@
 File and folder paths, and other variables needed by all modules in this package.
 """
 
-SAVE_FOLDER = "./data/"
-PLAYER_ID_FILE = "{0:s}reference/playerids.feather".format(SAVE_FOLDER)
-TEAM_ID_FILE = "{0:s}reference/teamids.feather".format(SAVE_FOLDER)
-BASIC_GAMELOG_FILE = "{0:s}reference/quickgamelog.feather".format(SAVE_FOLDER)
-PLAYER_NAMES_FILE = "{0:s}reference/playerids_names.feather".format(SAVE_FOLDER)
+import os
+import os.path
+
+SAVE_FOLDER = os.path.join(os.getcwd(), "data")
+PLAYER_ID_FILE = os.path.join(SAVE_FOLDER, 'reference', 'playerids.feather')
+TEAM_ID_FILE = os.path.join(SAVE_FOLDER, 'reference', 'teamids.feather')
+BASIC_GAMELOG_FILE = os.path.join(SAVE_FOLDER, 'reference', 'quickgamelog.feather')
+PLAYER_NAMES_FILE = os.path.join(SAVE_FOLDER, 'reference', 'playerids_names.feather')
 
 import datetime
 MAX_SEASON = datetime.datetime.now().year - 1
@@ -26,7 +29,7 @@ def create_season_folder(season):
         The season of the game. 2007-08 would be 2007.
     """
     import os
-    folder = '{0:s}{1:d}/'.format(SAVE_FOLDER, season)
+    folder = os.path.join(SAVE_FOLDER, str(season))
     os.mkdir(folder)
 
 def get_season_folder(season):
@@ -43,7 +46,7 @@ def get_season_folder(season):
     str
         The folder path
     """
-    return '{0:s}{1:d}/'.format(SAVE_FOLDER, season)
+    return os.path.join(SAVE_FOLDER, str(season))
 
 def get_player_id_file():
     """
