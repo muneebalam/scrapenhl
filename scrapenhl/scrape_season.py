@@ -337,7 +337,7 @@ def rewrite_globals(start_from_scratch = True, seasons = None):
         print('Done with', season)
 
 if __name__ == "__main__":
-    #for season in range(2007, 2017):
-    #    autoupdate(season)
-    #    update_teamlogs(season, True)
+    for season in range(2015, 2017):
+        autoupdate(season)
+        update_teamlogs(season, True) #have an error at some point in 2013 #and 2014
     pass
