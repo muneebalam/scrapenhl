@@ -164,6 +164,24 @@ def get_preferred_player_names():
         write_preferred_player_names_file()
         return feather.read_dataframe(PLAYER_NAMES_FILE)
 
+def player_id_to_name(pid):
+    """
+    Takes the ID and returns the player name
+
+    Parameters
+    -----------
+    playerid : int or float
+        The player id
+
+    Returns
+    --------
+    pname: str
+        The player name
+    """
+    df = get_preferred_player_names()
+    df = df.query('ID == {0:.1f}'.format(float(pid)))
+    return df.Name.iloc[0]
+
 def player_name_to_id(pname, team_helper=None):
     """
     Matches given player name to ID. If multiple matches, prints warning and continues with most common player.
