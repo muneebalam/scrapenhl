@@ -1,4 +1,5 @@
 import scrapenhl_globals
+import os.path
 
 def get_url(season, game):
     """
@@ -52,7 +53,7 @@ def get_json_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game.zlib
     """
-    return '{0:s}{1:d}/{2:d}.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return os.path.join(scrapenhl_globals.SAVE_FOLDER, season, '{0:d}.zlib'.format(game))
 
 def get_shift_save_filename(season, game):
     """
@@ -70,7 +71,7 @@ def get_shift_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game_shifts.zlib
     """
-    return '{0:s}{1:d}/{2:d}_shifts.zlib'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return os.path.join(scrapenhl_globals.SAVE_FOLDER, season, '{0:d}_shifts.zlib'.format(game))
 
 def get_parsed_save_filename(season, game):
     """
@@ -88,7 +89,7 @@ def get_parsed_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game_parsed.zlib
     """
-    return '{0:s}{1:d}/{2:d}_parsed.hdf5'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return os.path.join(scrapenhl_globals.SAVE_FOLDER, season, '{0:d}_parsed.hdf5'.format(game))
 
 def get_parsed_shifts_save_filename(season, game):
     """
@@ -106,7 +107,7 @@ def get_parsed_shifts_save_filename(season, game):
     str
         file name, SAVE_FOLDER/Season/Game_shifts_parsed.zlib
     """
-    return '{0:s}/{1:d}/{2:d}_shifts_parsed.hdf5'.format(scrapenhl_globals.SAVE_FOLDER, season, game)
+    return os.path.join(scrapenhl_globals.SAVE_FOLDER, season, '{0:d}_shifts_parsed.hdf5'.format(game))
 
 def scrape_game(season, game, force_overwrite = False):
     """
