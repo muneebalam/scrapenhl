@@ -1,4 +1,4 @@
-*Check out the re-write of this package [here](https://github.com/muneebalam/scrapenhl).*
+*Check out the re-write of this package [here](https://github.com/muneebalam/scrapenhl2).*
 
 # scrapenhl
 Scraping and manipulating NHL PbP Data
